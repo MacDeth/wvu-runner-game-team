@@ -645,19 +645,7 @@ class Game:
             Collide_Objects(self)
 
         # Check for platform collisions while falling
-        if self.player.vel.y > 0:
-            hits = pg.sprite.spritecollide(self.player, self.platforms, False)
-            if hits:
-                lower_platform = hits[0]
-                for hit in hits:
-                    if hit.rect.bottom > lower_platform.rect.bottom:
-                        lower_platform = hit
-                if self.player.pos.x < lower_platform.rect.right + 10 and self.player.pos.x > lower_platform.rect.left - 10:
-                    # Only move to platform top if feet higher than platform top
-                    if self.player.pos.y < lower_platform.rect.bottom:
-                        self.player.pos.y = lower_platform.rect.top + 1
-                        self.player.vel.y = 0
-                        self.player.jumping = False
+        self.platform_collision()
 
         # If player reaches rightmost 1/2 of screen
         if self.player.rect.centerx >= WIDTH / 2:
@@ -794,19 +782,7 @@ class Game:
 
         # Check for platform collisions while falling
         # May want platforms in main area?
-        if self.player.vel.y > 0:
-            hits = pg.sprite.spritecollide(self.player, self.platforms, False)
-            if hits:
-                lower_platform = hits[0]
-                for hit in hits:
-                    if hit.rect.bottom > lower_platform.rect.bottom:
-                        lower_platform = hit
-                if self.player.pos.x < lower_platform.rect.right + 10 and self.player.pos.x > lower_platform.rect.left - 10:
-                    # Only move to platform top if feet higher than platform top
-                    if self.player.pos.y < lower_platform.rect.bottom:
-                        self.player.pos.y = lower_platform.rect.top + 1
-                        self.player.vel.y = 0
-                        self.player.jumping = False
+        self.platform_collision()
 
         # The following results in some weird effects with the walls and floor moving incorrectly, something to look into later:
         # If player reaches rightmost 1/3 of screen
@@ -995,7 +971,23 @@ class Game:
         text_rect = text_surface.get_rect()
         text_rect.midtop = (xpos, ypos)
         self.screen.blit(text_surface, text_rect)
-
+    
+    def platform_collision(self):
+        if self.player.vel.y > 0:
+            hits = pg.sprite.spritecollide(self.player, self.platforms, False)
+            if hits:
+                lower_platform = hits[0]
+                for hit in hits:
+                    if hit.rect.bottom > lower_platform.rect.bottom:
+                        lower_platform = hit
+                if self.player.pos.x < lower_platform.rect.right + 10 and self.player.pos.x > lower_platform.rect.left - 10:
+                    # Only move to platform top if feet higher than platform top
+                    if self.player.pos.y < lower_platform.rect.bottom:
+                        self.player.pos.y = lower_platform.rect.top + 1
+                        self.player.rect.midbottom = self.player.pos
+                        self.player.vel.y = 0
+                        self.player.jumping = False
+                        
 # --CREATE GAME AND GO THROUGH EVENTS--
 g = Game()
 g.show_start_screen()
