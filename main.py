@@ -781,14 +781,16 @@ class Game:
         # Check for wall interaction:
         wall_hits = pg.sprite.spritecollide(self.player, self.walls, False)
         if wall_hits:
-            if self.player.vel.x < 0:
+            if self.player.rect.x < WIDTH / 2:
                 self.player.acc.x = 0
                 self.player.vel.x = 0
-                self.player.pos.x = self.player.rect.right
+                self.player.rect.left = wall_hits[0].rect.right
+                self.player.pos = vec(self.player.rect.midbottom)
             else:
                 self.player.acc.x = 0
                 self.player.vel.x = 0
-                self.player.pos.x = self.player.rect.left
+                self.player.rect.right = wall_hits[0].rect.left
+                self.player.pos = vec(self.player.rect.midbottom)
 
         # Check for platform collisions while falling
         # May want platforms in main area?
