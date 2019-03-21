@@ -84,7 +84,7 @@ class Spritesheet(pg.sprite.Sprite):
         image.blit(self.spritesheet, (0, 0), (x, y, width, height))
         return image
 
-
+"""Player class"""
 class Player(pg.sprite.Sprite):
     def __init__(self, game):
         # Set Player Sprite Layer
@@ -242,7 +242,7 @@ class Player(pg.sprite.Sprite):
         self.mask = pg.mask.from_surface(self.image)
 
 
-# Background Image Objects that you want to move through background
+"""Background Image Objects that you want to move through background"""
 class Background(pg.sprite.Sprite):
     def __init__(self, game):
         self._layer = BACK_ART_LAYER
@@ -256,11 +256,19 @@ class Background(pg.sprite.Sprite):
         # My background images were 800 x 800 and I wanted them aligned to the square game field:
         self.rect.x = 0
         self.rect.y = -800
+        
+        # Float representation of position
+        self.pos = vec(self.rect.x, self.rect.y)
 
     def update(self):
         # If the top of background objects go off the screen, remove them.
         if self.rect.right < 0:
             self.kill()
+            
+    def move(self, amt):
+        self.pos += amt
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
 
 
 class Platform(pg.sprite.Sprite):
@@ -279,12 +287,23 @@ class Platform(pg.sprite.Sprite):
         #self.image.set_colorkey(BLACK)
         self.image = pg.Surface((200, 50))
         self.image.fill(GREEN)
+        
+        # Set up rect
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        
+        # Float representation of position
+        self.pos = vec(x, y)
+        
         # Randomly generate a boost with a newly spawned platform:
         if random.randrange(100) < POWER_SPAWN:
             Power(self.game, self)
+            
+    def move(self, amt):
+        self.pos += amt
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
 
 class Floor(pg.sprite.Sprite):
     def __init__(self, game):
@@ -305,6 +324,14 @@ class Floor(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = -150
         self.rect.y = HEIGHT - 50
+        
+        # Float representation of position
+        self.pos = vec(self.rect.x, self.rect.y)
+        
+    def move(self, amt):
+        self.pos += amt
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
 
 
 class Wall(pg.sprite.Sprite):
@@ -324,8 +351,16 @@ class Wall(pg.sprite.Sprite):
         self.image = pg.Surface((150, 2 * HEIGHT))
         self.image.fill(BLACK)
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.bottom = HEIGHT - 50
+        self.rect.centerx = x
+        self.rect.centery = HEIGHT - 50
+        
+        # Float representation of position
+        self.pos = vec(x, self.rect.centery)
+        
+    def move(self, amt):
+        self.pos += amt
+        self.rect.centerx = self.pos.x
+        self.rect.centery = self.pos.y
 
 
 class Power(pg.sprite.Sprite):
@@ -514,12 +549,18 @@ class Door(pg.sprite.Sprite):
         self.vx = 0
         self.vy = 0
         self.dy = 0
+        self.pos = vec(x, y)
 
     def update(self):
             now = pg.time.get_ticks()
             center = self.rect.center
             self.rect.center = center
             self.rect.y += self.vy
+            
+    def move(self, amt):
+        self.pos += amt
+        self.rect.centerx = self.pos.x
+        self.rect.bottom = self.pos.y
 
 
 class Key(pg.sprite.Sprite):
@@ -549,9 +590,14 @@ class Key(pg.sprite.Sprite):
         '''
         self.image = pg.Surface((15, 30))
         self.image.fill(YELLOW)
+        
+        # Set up rect
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
+        
+        # Float representation of position
+        self.pos = vec(x, y)
 
     def update(self):
         now = pg.time.get_ticks()
@@ -559,8 +605,12 @@ class Key(pg.sprite.Sprite):
         #    self.last_update = now
         #    self.current_frame = (self.current_frame + 1) % len(self.images)
         #self.image = self.images[self.current_frame]
-
-
+        
+    def move(self, amt):
+        self.pos += amt
+        self.rect.centerx = self.pos.x
+        self.rect.bottom = self.pos.y
+        
 class Game:
     def __init__(self):
         # Initialize Game Window
@@ -713,8 +763,8 @@ class Game:
         Door(self, WIDTH / 8, HEIGHT - 50, 1, self.door1_key)
         Door(self, WIDTH / 2, HEIGHT - 50, 2, self.door2_key)
         Door(self, WIDTH - 100, HEIGHT - 50, 3, self.door3_key)
-        Wall(self, -325)
-        Wall(self, WIDTH)
+        Wall(self, -225)
+        Wall(self, WIDTH + 225)
         Floor(self)
         self.lvl_select_run()
 
@@ -789,29 +839,29 @@ class Game:
         if self.player.rect.centerx >= WIDTH * 3/4:
             self.player.pos.x -= max(abs(self.player.vel.x), 2)
             for bck_obj in self.background:
-                bck_obj.rect.x -= max(abs(self.player.vel.x) / 2, 2)
+                bck_obj.move((-max(abs(self.player.vel.x) / 2, 2), 0))
             for plat in self.platforms:
-                plat.rect.x -= max(abs(self.player.vel.x), 2)
+                plat.move((-max(abs(self.player.vel.x), 2), 0))
             for door in self.doors:
-                door.rect.x -= max(abs(self.player.vel.x), 2)
+                door.move((-max(abs(self.player.vel.x), 2), 0))
             for power in self.powerups:
-                power.rect.x -= max(abs(self.player.vel.x), 2)
+                power.move((-max(abs(self.player.vel.x), 2), 0))
             for wall in self.walls:
-                wall.rect.x -= max(abs(self.player.vel.x), 2)
+                wall.move((-max(abs(self.player.vel.x), 2), 0))
 
         # If player reaches leftmost 1/4 of screen
         if self.player.rect.centerx <= WIDTH / 4:
             self.player.pos.x += max(abs(self.player.vel.x), 2)
             for bck_obj in self.background:
-                bck_obj.rect.x += max(abs(self.player.vel.x) / 2, 2)
+                bck_obj.move((max(abs(self.player.vel.x) / 2, 2), 0))
             for plat in self.platforms:
-                plat.rect.x += max(abs(self.player.vel.x), 2)
+                plat.move((max(abs(self.player.vel.x), 2), 0))
             for door in self.doors:
-                door.rect.x += max(abs(self.player.vel.x), 2)
+                door.move((max(abs(self.player.vel.x), 2), 0))
             for power in self.powerups:
-                power.rect.x += max(abs(self.player.vel.x), 2)
+                power.move((max(abs(self.player.vel.x), 2), 0))
             for wall in self.walls:
-                wall.rect.x += max(abs(self.player.vel.x), 2)
+                wall.move((max(abs(self.player.vel.x), 2), 0))
 
         # Player Falls off Screen
         if self.player.rect.bottom > HEIGHT:
