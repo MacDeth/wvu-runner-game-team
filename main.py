@@ -1008,7 +1008,7 @@ class Game:
             self.highscore = self.score
             self.draw_text("You Have Never Survived Longer!", 35, WHITE, WIDTH / 2, HEIGHT / 2 + 50)
             with open(path.join(self.dir, HS_FILE), 'r+') as file:
-                file.write(str(self.score))
+                file.write(str(self.score) + '\n')
         else:
             self.draw_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH / 2, HEIGHT / 2 + 50)
 
@@ -1038,6 +1038,11 @@ class Game:
                         self.player.vel.y = 0
                         self.player.jumping = False
                         
+# If the highscore file doesn't exist, create it.
+if not path.exists(HS_FILE):
+    with open(HS_FILE, 'w') as file:
+        file.write('0\n')
+
 # --CREATE GAME AND GO THROUGH EVENTS--
 g = Game()
 g.show_start_screen()
