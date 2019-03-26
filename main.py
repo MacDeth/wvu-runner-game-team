@@ -455,6 +455,8 @@ def main():
     g.load_intro()
     while g.running:
         g.level_select()
+        if not g.running:
+            break;
         g.new()
         g.show_go_screen()
 
