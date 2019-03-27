@@ -236,7 +236,7 @@ class Game:
                 self.player.pos = vec(self.player.rect.midbottom)
 
         # Check for platform collisions while falling
-        # May want platforms in main area?
+        # TODO: May want platforms in main area?
         self.platform_collision()
 
         # The following results in some weird effects with the walls and floor moving incorrectly, something to look into later:
