@@ -1,6 +1,7 @@
 import pygame as pg
 import random
 from constants import *
+import controller
 
 # Vector for player movement
 vec = pg.math.Vector2
@@ -29,8 +30,8 @@ class Player(pg.sprite.Sprite):
     def __init__(self, game):
         # Set Player Sprite Layer
         self._layer = PLAYER_LAYER
-        self.groups = game.all_sprites
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite.__init__(self)
+        game.all_sprites.add(self, layer = PLAYER_LAYER)
         self.game = game
 
         # Make the player a basic yellow rectangle
@@ -52,7 +53,7 @@ class Player(pg.sprite.Sprite):
         self.pos = vec(WIDTH / 2, HEIGHT / 2)
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
-
+        
     def load_images(self):
         # Load Image Sheets and then Pass Them to "get_image" for specific frame extraction
         # Standing Animation
@@ -106,6 +107,16 @@ class Player(pg.sprite.Sprite):
     def update(self):
         self.animate()
         self.acc = vec(0, PLAYER_GRAVITY)
+        
+        # Controller
+        if self.game.controller is not None:
+            dpad = self.game.controller.get_axis(controller.HORIZ_AXIS)
+            if dpad < 0:
+                self.acc.x = -PLAYER_ACC
+            if dpad > 0:
+                self.acc.x = PLAYER_ACC
+            
+        # Keyboard
         keys = pg.key.get_pressed()
         if keys[pg.K_LEFT]:
             self.acc.x = -PLAYER_ACC
@@ -130,7 +141,6 @@ class Player(pg.sprite.Sprite):
         #if self.pos.x < 0 - self.rect.width / 2:
         #    self.pos.x = WIDTH + self.rect.width / 2
         self.rect.midbottom = self.pos
-
 
     def animate(self):
         '''
@@ -181,13 +191,11 @@ class Player(pg.sprite.Sprite):
         # More accurate collision mask for player
         self.mask = pg.mask.from_surface(self.image)
 
-
 """Background Image Objects that you want to move through background"""
 class Background(pg.sprite.Sprite):
     def __init__(self, game):
         self._layer = BACK_ART_LAYER
-        self.groups = game.all_sprites, game.background
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.background)
         self.game = game
         # Choose a random background object to display, use when sprites are done
         #self.image = random.choice(self.game.web_images)
@@ -210,12 +218,10 @@ class Background(pg.sprite.Sprite):
         self.rect.x = self.pos.x
         self.rect.y = self.pos.y
 
-
 class Platform(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self._layer = PLATFORM_LAYER
-        self.groups = game.all_sprites, game.platforms
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.platforms)
         self.game = game
         # Use when sprites are available
         '''
@@ -248,8 +254,7 @@ class Platform(pg.sprite.Sprite):
 class Floor(pg.sprite.Sprite):
     def __init__(self, game):
         self._layer = PLATFORM_LAYER
-        self.groups = game.all_sprites, game.platforms
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.platforms)
         self.game = game
         # Use when sprites are available
         '''
@@ -273,12 +278,10 @@ class Floor(pg.sprite.Sprite):
         self.rect.x = self.pos.x
         self.rect.y = self.pos.y
 
-
 class Wall(pg.sprite.Sprite):
     def __init__(self, game, x):
         self._layer = PLATFORM_LAYER
-        self.groups = game.all_sprites, game.walls
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.walls)
         self.game = game
         # Use when sprites are available
         '''
@@ -302,13 +305,11 @@ class Wall(pg.sprite.Sprite):
         self.rect.centerx = self.pos.x
         self.rect.centery = self.pos.y
 
-
 class Power(pg.sprite.Sprite):
     # Not sure if we want to add a power feature, like a boost?
     def __init__(self, game, plat):
         self._layer = POWER_LAYER
-        self.groups = game.all_sprites, game.powerups
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.powerups)
         self.game = game
         # Powerups are spawned with an associated platform:
         self.plat = plat
@@ -351,13 +352,11 @@ class Power(pg.sprite.Sprite):
         if not self.game.platforms.has(self.plat):
             self.kill()
 
-
-class Enemy(pg.sprite.Sprite):
+class Darkness(pg.sprite.Sprite):
     # Remade for our black smoke, maybe more depending on level:
     def __init__(self, game):
-        self._layer = ENEMY_LAYER
-        self.groups = game.all_sprites, game.mobs
-        pg.sprite.Sprite.__init__(self, self.groups)
+        self._layer = DARKNESS_LAYER
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.mobs)
         self.game = game
         self.current_frame = 0
         self.last_update = 0
@@ -406,12 +405,10 @@ class Enemy(pg.sprite.Sprite):
         #if self.rect.left > WIDTH + 100:
         #    self.kill()
 
-
-class Collide_Objects(pg.sprite.Sprite):
+class Obstacles(pg.sprite.Sprite):
     def __init__(self, game):
-        self._layer = PLATFORM_LAYER
-        self.groups = game.all_sprites, game.mobs
-        pg.sprite.Sprite.__init__(self, self.groups)
+        self._layer = OBSTACLE_LAYER
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.mobs)
         self.game = game
         self.current_frame = 0
         self.last_update = 0
@@ -463,11 +460,10 @@ class Collide_Objects(pg.sprite.Sprite):
 
 class Door(pg.sprite.Sprite):
     def __init__(self, game, x, y, number, key):
-        self._layer = DOOR_LAYER
+        self.layer = DOOR_LAYER
         self.locked = not key
         self.number = number
-        self.groups = game.all_sprites, game.doors
-        pg.sprite.Sprite.__init__(self, self.groups)
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.doors)
         self.game = game
         self.current_frame = 0
         self.last_update = 0
@@ -506,9 +502,8 @@ class Door(pg.sprite.Sprite):
 class Key(pg.sprite.Sprite):
     # Not sure if we want to add a power feature, like a boost?
     def __init__(self, game, x, y):
-        self._layer = POWER_LAYER
-        self.groups = game.all_sprites, game.powerups
-        pg.sprite.Sprite.__init__(self, self.groups)
+        self.layer = POWER_LAYER
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.powerups)
         self.game = game
         # Key animation?
         self.current_frame = 0

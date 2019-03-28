@@ -12,25 +12,46 @@ from constants import *
 
 class Game:
     def __init__(self):
-        # Initialize Game Window
-        # Create Starting Window:
         pg.init()
         pg.mixer.init()
-        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-        pg.display.set_caption(TITLE)
-        self.clock = pg.time.Clock()
-        self.running = True
-        self.font_name = pg.font.match_font(FONT_NAME)
+        
+        # Sprite groups
+        self.all_sprites = pg.sprite.LayeredUpdates()
+        self.platforms   = pg.sprite.Group()
+        self.background  = pg.sprite.Group()
+        self.powerups    = pg.sprite.Group() # includes key
+        self.walls       = pg.sprite.Group()
+        self.doors       = pg.sprite.Group()
+        self.mobs        = pg.sprite.Group()
+        self.background  = pg.sprite.Group()
+        self.screen      = pg.display.set_mode((WIDTH, HEIGHT))
+        
+        # Flags
+        self.running     = True
         self.interacting = False
-        self.entering = False
-        self.door1_key = False
-        self.door2_key = False
-        self.door3_key = False
-        self.door1_fact = True
-        self.door2_fact = True
-        self.door3_fact = True
-        self.load_data()
+        self.entering    = False
+        self.door1_key   = False
+        self.door2_key   = False
+        self.door3_key   = False
+        self.door1_fact  = True
+        self.door2_fact  = True
+        self.door3_fact  = True
+        
+        self.clock = pg.time.Clock()
         self.last_update = 0
+        
+        # Load assets scores and save
+        self.load_data()
+        
+        # if the player has a controller
+        if pg.joystick.get_count():
+            pg.joystick.init()
+            self.controller = pg.joystick.Joystick(0)
+            self.controller.init()
+        
+        # Title screen
+        self.font_name = pg.font.match_font(FONT_NAME)
+        pg.display.set_caption(TITLE)
 
     def load_data(self):
         # Load all assets, score, and save
@@ -56,17 +77,17 @@ class Game:
     def new(self):
         # Restart Game and Start Everything anew after entering a door
         self.score = 0
-        self.all_sprites = pg.sprite.LayeredUpdates()
-        self.platforms = pg.sprite.Group()
-        self.powerups = pg.sprite.Group()
-        self.mobs = pg.sprite.Group()
-        self.background = pg.sprite.Group()
+        self.all_sprites.empty()
+        self.platforms.empty()
+        self.powerups.empty()
+        self.mobs.empty()
+        self.background.empty()
         self.player = Player(self)
 
         # Initial Screen Platforms (Make this the area as soon as player enters door, before randomly generating level:
         for plat in PLATFORM_LIST:
             Platform(self, *plat)
-        Enemy(self)
+        Darkness(self)
         Floor(self)
         # Mob timer will be needed to spawn objects needing jumped/slid over/under:
         self.mob_timer = 0
@@ -91,7 +112,7 @@ class Game:
         # If we want to spawn additional objects to harm player:
         if now - self.mob_timer > ENEMY_FREQ + random.choice([-1000, -500, 0, 500, 1000]):
             self.mob_timer = now
-            Collide_Objects(self)
+            Obstacles(self)
 
         # Check for platform collisions while falling
         self.platform_collision()
@@ -111,7 +132,7 @@ class Game:
                     plat.kill()
                     self.score += 10
 
-        # Enemy Collision
+        # Darkness Collision
         mob_hits = pg.sprite.spritecollide(self.player, self.mobs, False)
         for e in mob_hits:
             # The only mobs that are on the platform layer are obstacles
@@ -150,13 +171,12 @@ class Game:
 # --LEVEL SELECT-- ROOM WITH 3 DOORS TO CHOOSE. LEVEL_SELECT IS CALLED ->
     # LVL_SELECT_RUN -> EVENTS & LVL_SELECT_UPDATE & LVL_SELECT_DRAW
     def level_select(self):
-        self.all_sprites = pg.sprite.LayeredUpdates()
-        self.platforms = pg.sprite.Group()
-        self.background = pg.sprite.Group()
-        # Powerups includes key, can be changed in future:
-        self.powerups = pg.sprite.Group()
-        self.walls = pg.sprite.Group()
-        self.doors = pg.sprite.Group()
+        self.all_sprites.empty()
+        self.platforms.empty()
+        self.background.empty()
+        self.powerups.empty()
+        self.walls.empty()
+        self.doors.empty()
         self.player = Player(self)
 
         # Draw central room with three doors to choose from:
@@ -282,15 +302,38 @@ class Game:
         # Game loop events
         for event in pg.event.get():
             # Jumping ability Check
+            # Controller
+            if event.type == pg.JOYBUTTONDOWN:
+                if event.button == controller.BUTTON_A:
+                    self.player.jump()
+            
+            # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_UP:
                     self.player.jump()
+                    
             # Jump can be controlled, little to big jump
+            # Controller
+            if event.type == pg.JOYBUTTONUP:
+                if event.button == controller.BUTTON_A:
+                    self.player.jump_stop()
+            
+            # Keyboard
             if event.type == pg.KEYUP:
                 if event.key == pg.K_UP:
                     self.player.jump_stop()
 
             # Slide Check
+            # Controller
+            if event.type == pg.JOYBUTTONDOWN:
+                if event.button == controller.BUTTON_B:
+                    self.player.slide()
+                    
+            if event.type == pg.JOYBUTTONUP:
+                if event.button == controller.BUTTON_B:
+                    self.player.slide_stop()
+            
+            # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_DOWN:
                     self.player.slide()
@@ -305,6 +348,16 @@ class Game:
                 self.running = False
 
             # Check for interacting:
+            # Controller
+            if event.type == pg.JOYBUTTONDOWN:
+                if event.button == controller.BUTTON_Y:
+                    self.interacting = True
+                    
+            if event.type == pg.JOYBUTTONUP:
+                if event.button == controller.BUTTON_Y:
+                    self.interacting = False
+                    
+            # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_i:
                     self.interacting = True
@@ -314,6 +367,16 @@ class Game:
                     self.interacting = False
 
             # Check for entering:
+            # Controller
+            if event.type == pg.JOYBUTTONDOWN:
+                if event.button == controller.BUTTON_X:
+                    self.entering = True
+                    
+            if event.type == pg.JOYBUTTONUP:
+                if event.button == controller.BUTTON_X:
+                    self.entering = False
+                    
+            # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_e:
                     self.entering = True
@@ -398,6 +461,8 @@ class Game:
                     waiting = False
                     self.running = False
                 if event.type == pg.KEYUP:
+                    waiting = False
+                if event.type == pg.JOYBUTTONUP:
                     waiting = False
 
     def show_go_screen(self):
