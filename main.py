@@ -12,25 +12,48 @@ from constants import *
 
 class Game:
     def __init__(self):
-        # Initialize Game Window
-        # Create Starting Window:
         pg.init()
         pg.mixer.init()
-        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-        pg.display.set_caption(TITLE)
-        self.clock = pg.time.Clock()
-        self.running = True
-        self.font_name = pg.font.match_font(FONT_NAME)
+        
+        # Sprite groups
+        self.all_sprites = pg.sprite.LayeredUpdates()
+        self.platforms   = pg.sprite.Group()
+        self.background  = pg.sprite.Group()
+        self.powerups    = pg.sprite.Group() # includes key
+        self.walls       = pg.sprite.Group()
+        self.doors       = pg.sprite.Group()
+        self.mobs        = pg.sprite.Group()
+        self.background  = pg.sprite.Group()
+        self.screen      = pg.display.set_mode((WIDTH, HEIGHT))
+        
+        # Flags
+        self.running     = True
         self.interacting = False
-        self.entering = False
-        self.door1_key = False
-        self.door2_key = False
-        self.door3_key = False
-        self.door1_fact = True
-        self.door2_fact = True
-        self.door3_fact = True
-        self.load_data()
+        self.entering    = False
+        self.door1_key   = False
+        self.door2_key   = False
+        self.door3_key   = False
+        self.door1_fact  = True
+        self.door2_fact  = True
+        self.door3_fact  = True
+        
+        self.clock = pg.time.Clock()
         self.last_update = 0
+        
+        # Load assets scores and save
+        self.load_data()
+        
+        # if the player has a controller
+        if pg.joystick.get_count():
+            pg.joystick.init()
+            self.controller = pg.joystick.Joystick(0)
+            self.controller.init()
+            if self.controller.get_name().upper().strip() != "USB Gamepad".upper():
+                self.controller = None
+        
+        # Title screen
+        self.font_name = pg.font.match_font(FONT_NAME)
+        pg.display.set_caption(TITLE)
 
     def load_data(self):
         # Load all assets, score, and save
@@ -53,36 +76,36 @@ class Game:
         '''
 
 # --NEW-- AFTER ENTERING A ROOM NEW IS CALLED -> RUN -> EVENTS & UPDATE & DRAW
-    def new(self):
+    def lvl_init(self):
         # Restart Game and Start Everything anew after entering a door
         self.score = 0
-        self.all_sprites = pg.sprite.LayeredUpdates()
-        self.platforms = pg.sprite.Group()
-        self.powerups = pg.sprite.Group()
-        self.mobs = pg.sprite.Group()
-        self.background = pg.sprite.Group()
+        self.all_sprites.empty()
+        self.platforms.empty()
+        self.powerups.empty()
+        self.mobs.empty()
+        self.background.empty()
         self.player = Player(self)
 
         # Initial Screen Platforms (Make this the area as soon as player enters door, before randomly generating level:
         for plat in PLATFORM_LIST:
             Platform(self, *plat)
-        Enemy(self)
+        Darkness(self)
         Floor(self)
         # Mob timer will be needed to spawn objects needing jumped/slid over/under:
         self.mob_timer = 0
-        self.run()
+        self.lvl_run()
 
-    def run(self):
+    def lvl_run(self):
         # Game Loop
         self.playing = True
 
         while self.playing:
             self.clock.tick(FPS)
-            self.events()
-            self.update()
+            self.process_events()
+            self.lvl_update()
             self.draw()
 
-    def update(self):
+    def lvl_update(self):
         # Game loop update
         # Update all content to be displayed to gamer
         self.all_sprites.update()
@@ -91,7 +114,7 @@ class Game:
         # If we want to spawn additional objects to harm player:
         if now - self.mob_timer > ENEMY_FREQ + random.choice([-1000, -500, 0, 500, 1000]):
             self.mob_timer = now
-            Collide_Objects(self)
+            Obstacles(self)
 
         # Check for platform collisions while falling
         self.platform_collision()
@@ -111,7 +134,7 @@ class Game:
                     plat.kill()
                     self.score += 10
 
-        # Enemy Collision
+        # Darkness Collision
         mob_hits = pg.sprite.spritecollide(self.player, self.mobs, False)
         for e in mob_hits:
             # The only mobs that are on the platform layer are obstacles
@@ -130,7 +153,7 @@ class Game:
                 # Jumping through platforms when boosted will not snap to platform:
                 self.player.jumping = False
 
-        # Need new platforms
+        # Need lvl_init platforms
         while len(self.platforms) < 8:
             width = random.randrange(50, 800)
             # More platformer like:
@@ -149,14 +172,13 @@ class Game:
 
 # --LEVEL SELECT-- ROOM WITH 3 DOORS TO CHOOSE. LEVEL_SELECT IS CALLED ->
     # LVL_SELECT_RUN -> EVENTS & LVL_SELECT_UPDATE & LVL_SELECT_DRAW
-    def level_select(self):
-        self.all_sprites = pg.sprite.LayeredUpdates()
-        self.platforms = pg.sprite.Group()
-        self.background = pg.sprite.Group()
-        # Powerups includes key, can be changed in future:
-        self.powerups = pg.sprite.Group()
-        self.walls = pg.sprite.Group()
-        self.doors = pg.sprite.Group()
+    def lvl_select_init(self):
+        self.all_sprites.empty()
+        self.platforms.empty()
+        self.background.empty()
+        self.powerups.empty()
+        self.walls.empty()
+        self.doors.empty()
         self.player = Player(self)
 
         # Draw central room with three doors to choose from:
@@ -179,9 +201,11 @@ class Game:
 
         while self.playing:
             self.clock.tick(FPS)
-            self.events()
+            self.process_events()
             self.lvl_select_update()
-            self.lvl_select_draw()
+            if not self.playing:
+                break;
+            self.draw()
 
     def lvl_select_update(self):
         # Game loop update
@@ -208,15 +232,15 @@ class Game:
             for door in door_hits:
                 if not door.locked:
                     if door.number == 1 and self.door1_fact:
-                        self.load_door1()
+                        self.door_screen("Door 1 Random Facts and History.")
                         self.door1_fact = False
                         self.entering = False
                     elif door.number == 2 and self.door2_fact:
-                        self.load_door2()
+                        self.door_screen("Door 2 Random Facts and History.")
                         self.door2_fact = False
                         self.entering = False
                     elif door.number == 3 and self.door3_fact:
-                        self.load_door3()
+                        self.door_screen("Door 3 Random Facts and History.")
                         self.door3_fact = False
                         self.entering = False
                     self.playing = False
@@ -277,20 +301,42 @@ class Game:
         if len(self.platforms) == 0:
             self.playing = False
 
-# --EVENTS-- SHARED BY BOTH LEVEL SELECTION & NEW GAME
-    def events(self):
-        # Game loop events
+    def process_events(self):
+        # Game loop process_events
         for event in pg.event.get():
             # Jumping ability Check
+            # Controller
+            if event.type == pg.JOYBUTTONDOWN:
+                if event.button == controller.BUTTON_A:
+                    self.player.jump()
+            
+            # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_UP:
                     self.player.jump()
+                    
             # Jump can be controlled, little to big jump
+            # Controller
+            if event.type == pg.JOYBUTTONUP:
+                if event.button == controller.BUTTON_A:
+                    self.player.jump_stop()
+            
+            # Keyboard
             if event.type == pg.KEYUP:
                 if event.key == pg.K_UP:
                     self.player.jump_stop()
 
             # Slide Check
+            # Controller
+            if event.type == pg.JOYBUTTONDOWN:
+                if event.button == controller.BUTTON_B:
+                    self.player.slide()
+                    
+            if event.type == pg.JOYBUTTONUP:
+                if event.button == controller.BUTTON_B:
+                    self.player.slide_stop()
+            
+            # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_DOWN:
                     self.player.slide()
@@ -305,6 +351,16 @@ class Game:
                 self.running = False
 
             # Check for interacting:
+            # Controller
+            if event.type == pg.JOYBUTTONDOWN:
+                if event.button == controller.BUTTON_Y:
+                    self.interacting = True
+                    
+            if event.type == pg.JOYBUTTONUP:
+                if event.button == controller.BUTTON_Y:
+                    self.interacting = False
+                    
+            # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_i:
                     self.interacting = True
@@ -314,6 +370,16 @@ class Game:
                     self.interacting = False
 
             # Check for entering:
+            # Controller
+            if event.type == pg.JOYBUTTONDOWN:
+                if event.button == controller.BUTTON_X:
+                    self.entering = True
+                    
+            if event.type == pg.JOYBUTTONUP:
+                if event.button == controller.BUTTON_X:
+                    self.entering = False
+                    
+            # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_e:
                     self.entering = True
@@ -323,27 +389,24 @@ class Game:
                     self.entering = False
 
     def draw(self):
-        # Draw loop elements after updating
         # Draw background and sprites:
         self.screen.fill(BGCOLOR)
         self.all_sprites.draw(self.screen)
-        self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
+        
+        # Doors for level select
+        if self.doors:
+            door_hits = pg.sprite.spritecollide(self.player, self.doors, False)
+            if door_hits and self.interacting:
+                for door in door_hits:
+                    if door.locked:
+                        self.draw_text("Locked.", 22, WHITE, door.rect.centerx, door.rect.bottom - 150)
+                    else:
+                        self.draw_text("Unlocked. E to Enter", 22, WHITE, door.rect.centerx, door.rect.bottom - 150)
+        
         # Flip display after drawing:
         pg.display.flip()
 
-    def lvl_select_draw(self):
-        self.screen.fill(BGCOLOR)
-        self.all_sprites.draw(self.screen)
-        door_hits = pg.sprite.spritecollide(self.player, self.doors, False)
-        if door_hits and self.interacting:
-            for door in door_hits:
-                if door.locked:
-                    self.draw_text("Locked.", 22, WHITE, door.rect.centerx, door.rect.bottom - 150)
-                else:
-                    self.draw_text("Unlocked. E to Enter", 22, WHITE, door.rect.centerx, door.rect.bottom - 150)
-        pg.display.flip()
-
-    def show_start_screen(self):
+    def start_screen(self):
         # Start up screen
         self.screen.fill(BGCOLOR)
         self.draw_text("Trans-Allegheny Lunatic Asylum Escape", 48, WHITE, WIDTH / 2, HEIGHT / 4)
@@ -354,53 +417,25 @@ class Game:
         pg.display.flip()
         self.wait_for_key()
 
-    def load_intro(self):
-        # After start screen introduction.
+    def intro_screen(self):
+        # After start screen
         self.screen.fill(BGCOLOR)
         self.draw_text("You took the dare to explore the building knowing it is off limits.", 22, WHITE, WIDTH / 2, HEIGHT / 2 - 25)
         self.draw_text("Upon entering, the floor gave and you fell into a room of three doors.", 22, WHITE, WIDTH / 2, HEIGHT / 2)
-        self.draw_text(" You think it best to look for a way out... you hear something lurking in the distance.", 22, WHITE, WIDTH / 2, HEIGHT / 2 + 25)
+        self.draw_text("You think it best to look for a way out... you hear something lurking in the distance.", 22, WHITE, WIDTH / 2, HEIGHT / 2 + 25)
         self.draw_text("Press Any Key to Continue!", 16, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
         pg.display.flip()
         self.wait_for_key()
 
-    def load_door1(self):
+    def door_screen(self, facts):
         # After start screen introduction.
         self.screen.fill(BGCOLOR)
-        self.draw_text("Door 1 Random Facts and History.", 22, WHITE, WIDTH / 2, HEIGHT / 2 - 25)
+        self.draw_text(facts, 22, WHITE, WIDTH / 2, HEIGHT / 2 - 25)
         self.draw_text("Press Any Key to Continue!", 16, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
         pg.display.flip()
         self.wait_for_key()
 
-    def load_door2(self):
-        # After start screen introduction.
-        self.screen.fill(BGCOLOR)
-        self.draw_text("Door 2 Random Facts and History.", 22, WHITE, WIDTH / 2, HEIGHT / 2 - 25)
-        self.draw_text("Press Any Key to Continue!", 16, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
-        pg.display.flip()
-        self.wait_for_key()
-
-    def load_door3(self):
-        # After start screen introduction.
-        self.screen.fill(BGCOLOR)
-        self.draw_text("Door 3 Random Facts and History.", 22, WHITE, WIDTH / 2, HEIGHT / 2 - 25)
-        self.draw_text("Press Any Key to Continue!", 16, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
-        pg.display.flip()
-        self.wait_for_key()
-
-    def wait_for_key(self):
-        pg.event.wait()
-        waiting = True
-        while waiting:
-            self.clock.tick(FPS)
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    waiting = False
-                    self.running = False
-                if event.type == pg.KEYUP:
-                    waiting = False
-
-    def show_go_screen(self):
+    def game_over_screen(self):
         # Game over screen only if you lose, not if you close program
         if not self.running:
             # Player Closed Application, so skip the Game Over screen
@@ -419,6 +454,20 @@ class Game:
 
         pg.display.flip()
         self.wait_for_key()
+
+    def wait_for_key(self):
+        pg.event.wait()
+        waiting = True
+        while waiting:
+            self.clock.tick(FPS)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    waiting = False
+                    self.running = False
+                if event.type == pg.KEYUP:
+                    waiting = False
+                if event.type == pg.JOYBUTTONUP:
+                    waiting = False
 
     def draw_text(self, text, size, color, xpos, ypos):
         font = pg.font.Font(self.font_name, size)
@@ -451,14 +500,19 @@ def main():
 
     # --CREATE GAME AND GO THROUGH EVENTS--
     g = Game()
-    g.show_start_screen()
-    g.load_intro()
+    
+    if g.running:
+        g.start_screen()
+    
+    if g.running:
+        g.intro_screen()
+        
     while g.running:
-        g.level_select()
+        g.lvl_select_init()
         if not g.running:
             break;
-        g.new()
-        g.show_go_screen()
+        g.lvl_init()
+        g.game_over_screen()
 
     pg.quit()
 
