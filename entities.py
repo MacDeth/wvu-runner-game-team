@@ -460,7 +460,7 @@ class Obstacles(pg.sprite.Sprite):
 
 class Door(pg.sprite.Sprite):
     def __init__(self, game, x, y, number, key):
-        self.layer = DOOR_LAYER
+        self._layer = DOOR_LAYER
         self.locked = not key
         self.number = number
         pg.sprite.Sprite.__init__(self, game.all_sprites, game.doors)
@@ -502,7 +502,7 @@ class Door(pg.sprite.Sprite):
 class Key(pg.sprite.Sprite):
     # Not sure if we want to add a power feature, like a boost?
     def __init__(self, game, x, y):
-        self.layer = POWER_LAYER
+        self._layer = POWER_LAYER
         pg.sprite.Sprite.__init__(self, game.all_sprites, game.powerups)
         self.game = game
         # Key animation?
