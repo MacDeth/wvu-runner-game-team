@@ -48,7 +48,7 @@ class Game:
             pg.joystick.init()
             self.controller = pg.joystick.Joystick(0)
             self.controller.init()
-            if self.controller.get_name() != "USB Gamepad":
+            if self.controller.get_name().upper().strip() != "USB Gamepad".upper():
                 self.controller = None
         
         # Title screen
