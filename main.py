@@ -48,6 +48,8 @@ class Game:
             pg.joystick.init()
             self.controller = pg.joystick.Joystick(0)
             self.controller.init()
+            if self.controller.get_name() != "USB Gamepad":
+                self.controller = None
         
         # Title screen
         self.font_name = pg.font.match_font(FONT_NAME)
