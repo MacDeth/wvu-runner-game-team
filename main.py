@@ -123,12 +123,13 @@ class Game:
         if self.player.rect.centerx >= WIDTH / 2:
             self.player.pos.x -= max(abs(self.player.vel.x), 2)
             for bck_obj in self.background:
-                bck_obj.rect.x -= max(abs(self.player.vel.x) / 2, 2)
+                bck_obj.move((-max(abs(self.player.vel.x) / 2, 2), 0))
             for mob in self.mobs:
-                mob.rect.x -= max(abs(self.player.vel.x), 2)
+                mob.move((-max(abs(self.player.vel.x), 2), 0))
             for power in self.powerups:
-                power.rect.x -= max(abs(self.player.vel.x), 2)
+                power.move((-max(abs(self.player.vel.x), 2), 0))
             for plat in self.platforms:
+                plat.move((-max(abs(self.player.vel.x), 2), 0))
                 plat.rect.x -= max(abs(self.player.vel.x), 2)
                 if plat.rect.right < 0:
                     plat.kill()

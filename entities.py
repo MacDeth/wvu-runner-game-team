@@ -337,6 +337,9 @@ class Power(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx = self.plat.rect.centerx
         self.rect.bottom = self.plat.rect.top - 80
+        
+        # Internal position
+        self.pos = vec(self.rect.centerx, self.rect.bottom);
 
     def update(self):
         now = pg.time.get_ticks()
@@ -351,6 +354,11 @@ class Power(pg.sprite.Sprite):
         # Remove sprite when platform is killed off screen
         if not self.game.platforms.has(self.plat):
             self.kill()
+            
+    def move(self, amt):
+        self.pos += amt
+        self.rect.centerx = self.pos.x
+        self.rect.bottom = self.pos.y
 
 class Darkness(pg.sprite.Sprite):
     # Remade for our black smoke, maybe more depending on level:
@@ -385,6 +393,9 @@ class Darkness(pg.sprite.Sprite):
         # Can make it speed up in future:
         self.vy = 0
         self.dy = 0
+        
+        # Internal position
+        self.pos = vec(self.rect.centerx, self.rect.y)
 
     def update(self):
         now = pg.time.get_ticks()
@@ -404,6 +415,12 @@ class Darkness(pg.sprite.Sprite):
         self.rect.y += self.vy
         #if self.rect.left > WIDTH + 100:
         #    self.kill()
+        self.pos = vec(self.rect.centerx, self.rect.y)
+        
+    def move(self, amt):
+        self.pos += amt
+        self.rect.centerx = self.pos.x
+        self.rect.y = self.pos.y
 
 class Obstacles(pg.sprite.Sprite):
     def __init__(self, game):
@@ -434,6 +451,9 @@ class Obstacles(pg.sprite.Sprite):
         self.vx = 0
         self.vy = 0
         self.dy = 0
+        
+        # Internal position
+        self.pos = vec(self.rect.centerx, self.rect.centery)
 
     def update(self):
         now = pg.time.get_ticks()
@@ -456,6 +476,11 @@ class Obstacles(pg.sprite.Sprite):
             self.kill()
         if self.rect.right < 0:
             self.kill()
+            
+    def move(self, amt):
+        self.pos += amt
+        self.rect.centerx = self.pos.x
+        self.rect.centery = self.pos.y
 
 
 class Door(pg.sprite.Sprite):
@@ -485,6 +510,8 @@ class Door(pg.sprite.Sprite):
         self.vx = 0
         self.vy = 0
         self.dy = 0
+        
+        # Internal position
         self.pos = vec(x, y)
 
     def update(self):
