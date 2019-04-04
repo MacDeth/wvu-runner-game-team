@@ -1,12 +1,15 @@
 # ---- Settings ----
-WIDTH = 1000
-HEIGHT = 500
+WIDTH = 1280
+HEIGHT = 720
 FPS = 30
 TITLE = "Trans-Allegheny Lunatic Asylum Escape"
-FONT_NAME = 'arial'
+FONT_NAME = 'syncopate'
 HS_FILE = "CS475_Asylum_Progress.txt"
-# When sprtiesheet is finished:
-#SPRITE_FILE = ".png"
+
+# IMAGE LOADING:
+SPRITE_FILE = "Player.png"
+START_IMG = 'AsylumHomeStart.jpg'
+Death_IMG = 'AsylumHomeDeath.jpg'
 
 # Colors
 WHITE = (255, 255, 255)
@@ -17,14 +20,14 @@ GREEN = (11, 102, 35)
 BLACK = (0, 0, 0)
 SKY = (102, 178, 255)
 GRAY = (49, 51, 53)
-BGCOLOR = GRAY
+BGCOLOR = WHITE
 
 # Player Sprite Parameters
-PLAYER_ACC = 0.8
+PLAYER_ACC = 0.9
 # PLAYER_FRICTION = -0.09
 PLAYER_FRICTION = -0.06
 PLAYER_GRAVITY = 1
-PLAYER_JUMP = 26
+PLAYER_JUMP = 30
 
 # Power Up Boosts
 BOOST_POWER = 30
