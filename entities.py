@@ -9,12 +9,11 @@ vec = pg.math.Vector2
 class Spritesheet(pg.sprite.Sprite):
     # Load the sprite sheet PNG
     def __init__(self, filename):
-        self.spritesheet = pg.image.load(filename).convert()
+        self.spritesheet = pg.image.load(filename).convert_alpha()
 
     def get_image(self, x, y, width, height):
         # Grab PNG images:
-        image = pg.Surface((width, height))
-        image.blit(self.spritesheet, (0, 0), (x, y, width, height))
+        image = self.spritesheet.subsurface(pg.Rect((x, y), (width, height)))
         # Can scale sprites to get a certain aspect ratio:
         image = pg.transform.scale(image, (width // 2, height // 2))
         return image
@@ -34,19 +33,16 @@ class Player(pg.sprite.Sprite):
         game.all_sprites.add(self, layer = PLAYER_LAYER)
         self.game = game
 
-        # Make the player a basic yellow rectangle
-        self.image = pg.Surface((50, 100))
-        self.image.fill(YELLOW)
-
         # Boolean States Used for Determining Animation States
         self.walking = False
         self.jumping = False
+        self.sliding = False
         self.current_frame = 0
         self.last_update = 0
 
         # Use Load Image when Spritesheet is Done
-        #self.load_images()
-        #self.image = self.standing_frames[0]
+        self.load_images()
+        self.image = self.standing_frames[0]
         self.rect = self.image.get_rect()
 
         # Position, Velocity, and Acceleration Vectors for Movement
@@ -57,26 +53,30 @@ class Player(pg.sprite.Sprite):
     def load_images(self):
         # Load Image Sheets and then Pass Them to "get_image" for specific frame extraction
         # Standing Animation
-        self.standing_frames = [self.game.spritesheet.get_image(0, 50, 200, 120),
-                                self.game.spritesheet.get_image(200, 50, 200, 120),
-                                self.game.spritesheet.get_image(400, 50, 200, 120)]
-        for frame in self.standing_frames:
-            frame.set_colorkey(0)
-
+        self.standing_frames = [self.game.spritesheet.get_image(0, 1024, 512, 512),
+                                self.game.spritesheet.get_image(512, 1024, 512, 512)]
+       
         # Walking Animation
-        self.walking_frames_l = [self.game.spritesheet.get_image(0, 250, 200, 120),
-                                 self.game.spritesheet.get_image(200, 250, 200, 120)]
-        self.walking_frames_r = []
-        for frame in self.walking_frames_l:
-            frame.set_colorkey(BLACK)
+        self.walking_frames_r = [self.game.spritesheet.get_image(0, 0, 512, 512),
+                                 self.game.spritesheet.get_image(512, 0, 512, 512),
+                                 self.game.spritesheet.get_image(1024, 0, 512, 512),
+                                 self.game.spritesheet.get_image(1536, 0, 512, 512),
+                                 self.game.spritesheet.get_image(0, 512, 512, 512),
+                                 self.game.spritesheet.get_image(512, 512, 512, 512),
+                                 self.game.spritesheet.get_image(1024, 512, 512, 512),
+                                 self.game.spritesheet.get_image(1536, 512, 512, 512)]
+        self.walking_frames_l = []
+        for frame in self.walking_frames_r:
             # Only draw one half of walking right animation and then flip it for left animation:
-            self.walking_frames_r.append(pg.transform.flip(frame, True, False))
+            self.walking_frames_l.append(pg.transform.flip(frame, True, False))
 
         # Jumping Animation
-        self.jump_frames_l = self.game.spritesheet.get_image(400, 600, 200, 180)
-        self.jump_frames_r = pg.transform.flip(self.jump_frames_l, True, False)
-        self.jump_frames_l.set_colorkey(0)
-        self.jump_frames_r.set_colorkey(0)
+        self.jump_frames_r = self.game.spritesheet.get_image(0, 0, 512, 512)
+        self.jump_frames_l = pg.transform.flip(self.jump_frames_r, True, False)
+        
+        # Sliding Animation
+        self.sliding_frames_r = self.game.spritesheet.get_image(1024, 1280, 512, 256)
+        self.sliding_frames_l = pg.transform.flip(self.sliding_frames_r, True, False)
 
     def jump(self):
         # Jump Only if Platform Collision
@@ -95,14 +95,10 @@ class Player(pg.sprite.Sprite):
                 self.vel.y = -8;
 
     def slide(self):
-        self.image = pg.Surface((100, 50))
-        self.image.fill(YELLOW)
-        self.rect = self.image.get_rect()
+        self.sliding = True
 
     def slide_stop(self):
-        self.image = pg.Surface((50, 100))
-        self.image.fill(YELLOW)
-        self.rect = self.image.get_rect()
+        self.sliding = False
 
     def update(self):
         self.animate()
@@ -143,9 +139,8 @@ class Player(pg.sprite.Sprite):
         self.rect.midbottom = self.pos
 
     def animate(self):
-        '''
         now = pg.time.get_ticks()
-        if self.vel.x != 0:
+        if self.vel.x >= 4 or self.vel.x <= -4:
             self.walking = True
         else:
             self.walking = False
@@ -153,7 +148,7 @@ class Player(pg.sprite.Sprite):
         # Walking Time
         if self.walking:
             # 200 is arbitrarily chosen, depending on #frames in spritesheet
-            if now - self.last_update > 200:
+            if now - self.last_update > 70:
                 self.last_update = now
                 self.current_frame = (self.current_frame + 1) % len(self.walking_frames_l)
                 bottom = self.rect.bottom
@@ -166,7 +161,7 @@ class Player(pg.sprite.Sprite):
 
         # Jumping Time
         if self.jumping:
-            if now - self.last_update > 188:
+            if now - self.last_update > 50:
                 self.last_update = now
                 # self.current_frame = (self.current_frame + 1) % len(self.walking_frames_l)
                 bottom = self.rect.bottom
@@ -175,19 +170,35 @@ class Player(pg.sprite.Sprite):
                 elif self.vel.x < 0 and self.vel.y < 0:
                     self.image = self.jump_frames_l
                 else:
-                    self.image = self.standing_frames[0]
+                    #self.image = self.walking_frames_r[0]
+                    pass
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
 
         if not self.jumping and not self.walking:
-            if now - self.last_update > 350:
+            if now - self.last_update > 250:
                 self.last_update = now
                 self.current_frame = (self.current_frame + 1) % len(self.standing_frames)
                 bottom = self.rect.bottom
                 self.image = self.standing_frames[self.current_frame]
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
-                '''
+
+        if self.sliding:
+            if now - self.last_update > 50:
+                self.last_update = now
+                # self.current_frame = (self.current_frame + 1) % len(self.walking_frames_l)
+                bottom = self.rect.bottom
+                if self.vel.x > 0 or self.vel.y < 0:
+                    self.image = self.sliding_frames_r
+                elif self.vel.x < 0 or self.vel.y < 0:
+                    self.image = self.sliding_frames_l
+                else:
+                    #self.image = self.walking_frames_r[0]
+                    pass
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
+                
         # More accurate collision mask for player
         self.mask = pg.mask.from_surface(self.image)
 
@@ -232,7 +243,7 @@ class Platform(pg.sprite.Sprite):
         #self.image = random.choice(images)
         #self.image.set_colorkey(BLACK)
         self.image = pg.Surface((200, 50))
-        self.image.fill(GREEN)
+        self.image.fill(GRAY)
 
         # Set up rect
         self.rect = self.image.get_rect()
@@ -265,7 +276,7 @@ class Floor(pg.sprite.Sprite):
         #self.image = random.choice(images)
         #self.image.set_colorkey(BLACK)
         self.image = pg.Surface((WIDTH + 300, 50))
-        self.image.fill(GREEN)
+        self.image.fill(GRAY)
         self.rect = self.image.get_rect()
         self.rect.x = -150
         self.rect.y = HEIGHT - 50
@@ -292,7 +303,7 @@ class Wall(pg.sprite.Sprite):
         #self.image = random.choice(images)
         #self.image.set_colorkey(BLACK)
         self.image = pg.Surface((150, 2 * HEIGHT))
-        self.image.fill(BLACK)
+        self.image.fill(GRAY)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.centery = HEIGHT - 50
@@ -477,7 +488,7 @@ class Door(pg.sprite.Sprite):
             frame.set_colorkey(BLACK)
         self.image = self.images[self.current_frame]
         '''
-        self.image = pg.Surface((100, 220))
+        self.image = pg.Surface((150, 300))
         self.image.fill(BROWN)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
