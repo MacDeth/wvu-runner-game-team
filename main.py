@@ -74,6 +74,14 @@ class Game:
         # Loading Image
         self.spritesheet = Spritesheet(path.join(img_dir, SPRITE_FILE))
         '''
+        # Loading Spritesheet Image
+        self.spritesheet = Spritesheet(path.join(img_dir, SPRITE_FILE))
+
+        # LOAD BACKGROUND IMAGES                                    
+        self.start_img = pg.image.load(path.join(img_dir, START_IMG)).convert_alpha()
+        self.start_img = pg.transform.scale(self.start_img, (1380, 1080))
+        self.death_img = pg.image.load(path.join(img_dir, Death_IMG)).convert_alpha()
+        self.death_img = pg.transform.scale(self.death_img, (1380, 1080))
 
 # --NEW-- AFTER ENTERING A ROOM NEW IS CALLED -> RUN -> EVENTS & UPDATE & DRAW
     def lvl_init(self):
@@ -261,7 +269,7 @@ class Game:
                 self.player.pos = vec(self.player.rect.midbottom)
 
         # Check for platform collisions while falling
-        # May want platforms in main area?
+        # TODO: May want platforms in main area?
         self.platform_collision()
 
         # The following results in some weird effects with the walls and floor moving incorrectly, something to look into later:
@@ -409,30 +417,30 @@ class Game:
 
     def start_screen(self):
         # Start up screen
-        self.screen.fill(BGCOLOR)
-        self.draw_text("Trans-Allegheny Lunatic Asylum Escape", 48, WHITE, WIDTH / 2, HEIGHT / 4)
-        self.draw_text("Left & Right Arrow Keys to Move & Up Arrow Key to Jump", 22, WHITE, WIDTH / 2, HEIGHT / 2)
-        self.draw_text("Down Arrow Key to Slide & i to Interact", 22, WHITE, WIDTH / 2, HEIGHT / 2 + 50)
-        self.draw_text("Press Any Key to Begin!", 22, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
-        self.draw_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH / 2, 15)
+        self.screen.blit(self.start_img, [-25, -80])
+        self.draw_text("ASYLUM      ESCAPE", 150, GRAY, WIDTH / 2, HEIGHT / 8)
+        #self.draw_text("Left & Right Arrow Keys to Move & Up Arrow Key to Jump", 22, GRAY, WIDTH / 2, HEIGHT / 2)
+        #self.draw_text("Down Arrow Key to Slide & i to Interact", 22, GRAY, WIDTH / 2, HEIGHT / 2 + 50)
+        self.draw_text("Use Any Key to Enter!", 22, GRAY, WIDTH / 2, HEIGHT / 8 + 110)
+        self.draw_text("High Score: " + str(self.highscore), 22, GRAY, WIDTH / 2, 15)
         pg.display.flip()
         self.wait_for_key()
 
     def intro_screen(self):
-        # After start screen
+        # After start screen.
         self.screen.fill(BGCOLOR)
-        self.draw_text("You took the dare to explore the building knowing it is off limits.", 22, WHITE, WIDTH / 2, HEIGHT / 2 - 25)
-        self.draw_text("Upon entering, the floor gave and you fell into a room of three doors.", 22, WHITE, WIDTH / 2, HEIGHT / 2)
-        self.draw_text("You think it best to look for a way out... you hear something lurking in the distance.", 22, WHITE, WIDTH / 2, HEIGHT / 2 + 25)
-        self.draw_text("Press Any Key to Continue!", 16, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
+        self.draw_text("You took the dare to explore the building knowing it is off limits.", 22, BLACK, WIDTH / 2, HEIGHT / 2 - 25)
+        self.draw_text("Upon entering, the floor gave and you fell into a room of three doors.", 22, BLACK, WIDTH / 2, HEIGHT / 2)
+        self.draw_text(" You think it best to look for a way out... you hear something lurking in the distance.", 22, BLACK, WIDTH / 2, HEIGHT / 2 + 25)
+        self.draw_text("Press Any Key to Continue!", 16, BLACK, WIDTH / 2, HEIGHT * 3 / 4)
         pg.display.flip()
         self.wait_for_key()
 
     def door_screen(self, facts):
         # After start screen introduction.
         self.screen.fill(BGCOLOR)
-        self.draw_text(facts, 22, WHITE, WIDTH / 2, HEIGHT / 2 - 25)
-        self.draw_text("Press Any Key to Continue!", 16, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
+        self.draw_text(facts, 22, BLACK, WIDTH / 2, HEIGHT / 2 - 25)
+        self.draw_text("Press Any Key to Continue!", 16, BLACK, WIDTH / 2, HEIGHT * 3 / 4)
         pg.display.flip()
         self.wait_for_key()
 
@@ -441,17 +449,18 @@ class Game:
         if not self.running:
             # Player Closed Application, so skip the Game Over screen
             return
-        self.screen.fill(BGCOLOR)
-        self.draw_text("You Did Not Escape", 48, WHITE, WIDTH / 2, HEIGHT / 4)
-        self.draw_text("SCORE: " + str(self.score), 22, WHITE, WIDTH / 2, HEIGHT / 2)
-        self.draw_text("Want to Run Again? Press Any Key to Play Again", 22, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
+        self.screen.blit(self.death_img, [-25, -80])
+        self.draw_text("YOU ARE TRAPPED", 100, WHITE, WIDTH / 2, HEIGHT / 8)
+        self.draw_text("SCORE: " + str(self.score), 22, WHITE, WIDTH / 2, HEIGHT / 4 + 25)
+        self.draw_text("Want to Run Again?                                                   "
+                       "                Use Any Key to Play Again", 22, WHITE, WIDTH / 2, HEIGHT / 6 + 50)
         if self.score > self.highscore:
             self.highscore = self.score
-            self.draw_text("You Have Never Survived Longer!", 35, WHITE, WIDTH / 2, HEIGHT / 2 + 50)
+            self.draw_text("You Almost Escaped!", 35, WHITE, WIDTH / 2, HEIGHT / 4 + 95)
             with open(path.join(self.dir, HS_FILE), 'r+') as file:
                 file.write(str(self.score) + '\n')
         else:
-            self.draw_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH / 2, HEIGHT / 2 + 50)
+            self.draw_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH / 2, HEIGHT / 4 + 95)
 
         pg.display.flip()
         self.wait_for_key()
