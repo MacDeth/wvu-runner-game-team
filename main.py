@@ -44,6 +44,7 @@ class Game:
         self.load_data()
         
         # if the player has a controller
+        self.controller = None
         if pg.joystick.get_count():
             pg.joystick.init()
             self.controller = pg.joystick.Joystick(0)
@@ -474,9 +475,9 @@ class Game:
                 if event.type == pg.QUIT:
                     waiting = False
                     self.running = False
-                if event.type == pg.KEYUP:
+                if event.type == pg.KEYDOWN:
                     waiting = False
-                if event.type == pg.JOYBUTTONUP:
+                if event.type == pg.JOYBUTTONDOWN:
                     waiting = False
 
     def draw_text(self, text, size, color, xpos, ypos):
