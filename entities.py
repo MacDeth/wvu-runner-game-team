@@ -491,8 +491,9 @@ class Obstacles(pg.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
-        if self.used and not self._used_indicator:
+        if self.used and not self._used_indicator: # only complete this fill once
             self.image.fill(DARK_RED)
+            self._used_indicator = True
             
     def move(self, amt):
         self.pos += amt
