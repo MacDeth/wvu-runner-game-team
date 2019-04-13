@@ -149,7 +149,7 @@ class Game:
         for e in mob_hits:
             # The only mobs that are on the platform layer are obstacles
             if e._layer == PLATFORM_LAYER:
-                # TODO: Change this maybe? It can really launch the player
+
                 if not e.used:
                     self.player.vel.x -= BOOST_POWER #/ 2
                     e.used = True
