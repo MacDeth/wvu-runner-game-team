@@ -14,6 +14,7 @@ Death_IMG = 'AsylumHomeDeath.jpg'
 # Colors
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+DARK_RED = (150, 0, 0)
 BROWN = (133, 87, 35)
 YELLOW = (255, 204, 0)
 GREEN = (11, 102, 35)
