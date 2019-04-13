@@ -466,6 +466,9 @@ class Obstacles(pg.sprite.Sprite):
         # Internal position
         self.pos = vec(self.rect.centerx, self.rect.centery)
 
+        self.used = False
+        self._used_indicator = False
+
     def update(self):
         now = pg.time.get_ticks()
         self.rect.x += self.vx
@@ -487,6 +490,9 @@ class Obstacles(pg.sprite.Sprite):
             self.kill()
         if self.rect.right < 0:
             self.kill()
+
+        if self.used and not self._used_indicator:
+            self.image.fill(DARK_RED)
             
     def move(self, amt):
         self.pos += amt
