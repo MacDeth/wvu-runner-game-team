@@ -511,9 +511,9 @@ class Game:
             if door_hits and self.interacting:
                 for door in door_hits:
                     if door.locked:
-                        self.draw_text("Locked.", 22, WHITE, door.rect.centerx, door.rect.bottom - 150)
+                        self.draw_text("Locked.", 22, BLACK, door.rect.centerx, door.rect.bottom - 350)
                     else:
-                        self.draw_text("Unlocked. E to Enter", 22, WHITE, door.rect.centerx, door.rect.bottom - 150)
+                        self.draw_text("Unlocked. E to Enter", 22, BLACK, door.rect.centerx, door.rect.bottom - 350)
         
         # Flip display after drawing:
         pg.display.flip()
