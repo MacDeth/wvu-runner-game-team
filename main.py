@@ -47,10 +47,10 @@ class Game:
         self.door1_fact  = True
         self.door2_fact  = True
         self.door3_fact  = True
-        self.curr_level  = 1;
         
         self.clock = pg.time.Clock()
         self.last_update = 0
+        self.score = 0;
         
         # Load assets scores and save
         self.load_data()
