@@ -35,6 +35,7 @@ class Game:
         self.doors       = pg.sprite.Group()
         self.mobs        = pg.sprite.Group()
         self.background  = pg.sprite.Group()
+        self.lights      = pg.sprite.Group()
         self.screen      = pg.display.set_mode((WIDTH, HEIGHT))
         
         # Flags
@@ -94,6 +95,42 @@ class Game:
         self.start_img = pg.transform.scale(self.start_img, (1380, 1080))
         self.death_img = pg.image.load(path.join(img_dir, Death_IMG)).convert_alpha()
         self.death_img = pg.transform.scale(self.death_img, (1380, 1080))
+        #self.ward1_img = pg.image.load(path.join(img_dir, WARD1_IMG)).convert_alpha()
+        #self.ward2_img = pg.image.load(path.join(img_dir, WARD2_IMG)).convert_alpha()
+
+        self.platform1_img = pg.image.load(path.join(img_dir, PLATFORM1_IMG)).convert_alpha()
+        self.platform1_img = pg.transform.scale(self.platform1_img, (200, 50))
+        self.platform2_img = pg.image.load(path.join(img_dir, PLATFORM2_IMG)).convert_alpha()
+        self.platform2_img = pg.transform.scale(self.platform2_img, (200, 50))
+        self.platform3_img = pg.image.load(path.join(img_dir, PLATFORM3_IMG)).convert_alpha()
+        self.platform3_img = pg.transform.scale(self.platform3_img, (200, 50))
+
+        self.bookcase_img = pg.image.load(path.join(img_dir, BOOKCASE_IMG)).convert_alpha()
+        self.bookcase_img = pg.transform.scale(self.bookcase_img, (300, 250))
+
+        self.wheelchair1_img = pg.image.load(path.join(img_dir, WHEELCHAIR_IMG)).convert_alpha()
+        self.wheelchair1_img = pg.transform.scale(self.wheelchair1_img, (200, 200))
+
+        self.wheelchair2_img = pg.image.load(path.join(img_dir, WHEELCHAIR_IMG2)).convert_alpha()
+        self.wheelchair2_img = pg.transform.scale(self.wheelchair2_img, (150, 150))
+
+        self.stretcher_img = pg.image.load(path.join(img_dir, STRETCHER_IMG)).convert_alpha()
+        self.stretcher_img = pg.transform.scale(self.stretcher_img, (350, 200))
+
+        self.light1_img = pg.image.load(path.join(img_dir, LIGHT_IMG)).convert_alpha()
+        self.light1_img = pg.transform.scale(self.light1_img, (75, 125))
+
+        self.light2_img = pg.image.load(path.join(img_dir, LIGHT2_IMG)).convert_alpha()
+        self.light2_img = pg.transform.scale(self.light2_img, (75, 125))
+
+        self.darkness_img = pg.image.load(path.join(img_dir, DARKNESS_IMG)).convert_alpha()
+        self.darkness_img = pg.transform.scale(self.darkness_img, (WIDTH, HEIGHT))
+
+        self.key_img = pg.image.load(path.join(img_dir, KEY_IMG)).convert_alpha()
+        self.key_img = pg.transform.scale(self.key_img, (50, 100))
+        
+        self.door_img = pg.image.load(path.join(img_dir, DOOR_IMG)).convert_alpha()
+        self.door_img = pg.transform.scale(self.door_img, (200, 350))
 
 # --NEW-- AFTER ENTERING A ROOM NEW IS CALLED -> RUN -> EVENTS & UPDATE & DRAW
     def lvl_init(self):
@@ -103,6 +140,7 @@ class Game:
         self.platforms.empty()
         self.powerups.empty()
         self.mobs.empty()
+        self.lights.empty()
         self.background.empty()
         self.player = Player(self)
 
@@ -155,6 +193,10 @@ class Game:
                 mob.move((-max(abs(self.player.vel.x), 2), 0))
             for power in self.powerups:
                 power.move((-max(abs(self.player.vel.x), 2), 0))
+            for light in self.lights:
+                light.rect.x -= max(abs(self.player.vel.x), 2)
+                if light.rect.right < 0:
+                    light.kill()
             for plat in self.platforms:
                 plat.move((-max(abs(self.player.vel.x), 2), 0))
                 plat.rect.x -= max(abs(self.player.vel.x), 2)
@@ -196,6 +238,10 @@ class Game:
             Platform(self, random.randrange(WIDTH, WIDTH + width), random.randrange(200, HEIGHT - 100))
             # More runner like:
             #Platform(self, WIDTH + 50, HEIGHT - 50)
+            
+        # Need new lights
+        while len(self.lights) < 1:
+            Light(self, random.randrange(WIDTH + 100, 2 * WIDTH), random.randrange(0, 80))
 
         # Player Falls off Screen
         if self.player.rect.bottom > HEIGHT:
@@ -216,17 +262,18 @@ class Game:
         self.powerups.empty()
         self.walls.empty()
         self.doors.empty()
+        self.lights.empty()
         self.player = Player(self)
 
         # Draw central room with three doors to choose from:
         # Choosing doors in an inefficient way:
         if not self.door1_key:
             # If key 1 not picked up, draw it in central room:
-            Key(self, WIDTH / 2, HEIGHT / 8)
+            Key(self, WIDTH / 2, HEIGHT / 8 + 100)
 
-        Door(self, WIDTH / 8, HEIGHT - 50, 1, self.door1_key)
-        Door(self, WIDTH / 2, HEIGHT - 50, 2, self.door2_key)
-        Door(self, WIDTH - 100, HEIGHT - 50, 3, self.door3_key)
+        Door(self, WIDTH / 8, HEIGHT - 25, 1, self.door1_key)
+        Door(self, WIDTH / 2, HEIGHT - 25, 2, self.door2_key)
+        Door(self, WIDTH - 100, HEIGHT - 25, 3, self.door3_key)
         Wall(self, -225)
         Wall(self, WIDTH + 225)
         Floor(self)
@@ -321,6 +368,8 @@ class Game:
                 power.move((-max(abs(self.player.vel.x), 2), 0))
             for wall in self.walls:
                 wall.move((-max(abs(self.player.vel.x), 2), 0))
+            for light in self.lights:
+                light.move((-max(abs(self.player.vel.x), 2), 0))
 
         # If player reaches leftmost 1/4 of screen
         if self.player.rect.centerx <= WIDTH / 4:
@@ -335,6 +384,8 @@ class Game:
                 power.move((max(abs(self.player.vel.x), 2), 0))
             for wall in self.walls:
                 wall.move((max(abs(self.player.vel.x), 2), 0))
+            for light in self.lights:
+                light.move((-max(abs(self.player.vel.x), 2), 0))
 
         # Player Falls off Screen
         if self.player.rect.bottom > HEIGHT:
