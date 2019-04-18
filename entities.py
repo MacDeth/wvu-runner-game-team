@@ -313,7 +313,7 @@ class Wall(pg.sprite.Sprite):
         
 class Light(pg.sprite.Sprite):
     def __init__(self, game, x, y):
-        self._layer = ENEMY_LAYER
+        self._layer = OBSTACLE_LAYER
         self.groups = game.all_sprites, game.lights
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
