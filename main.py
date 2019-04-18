@@ -488,7 +488,7 @@ class Game:
         # Draw background and sprites:
         self.screen.fill(BGCOLOR)
         self.all_sprites.draw(self.screen)
-        self.draw_text(str(self.score), 22, BLACK, WIDTH / 2, 15)
+        #self.draw_text(str(self.score), 22, BLACK, WIDTH / 2, 15)
         
         # Doors for level select
         if self.doors:
