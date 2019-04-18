@@ -7,14 +7,24 @@
 import pygame as pg
 import random
 from os import path, listdir
+from enum import Enum
 from entities import *
 from constants import *
-from os.path import isfile
+
+class LevelState(Enum):
+    LEVEL_SELECT = 1
+    LEVEL_ONE = 2
+    LEVEL_TWO = 3
+    LEVEL_THREE = 4
+    GAME_OVER = 5
 
 class Game:
     def __init__(self):
         pg.init()
         pg.mixer.init()
+
+        # make sure we start out on the level select screen
+        self.level_state = LevelState.LEVEL_SELECT
         
         # Sprite groups
         self.all_sprites = pg.sprite.LayeredUpdates()
@@ -24,6 +34,7 @@ class Game:
         self.walls       = pg.sprite.Group()
         self.doors       = pg.sprite.Group()
         self.mobs        = pg.sprite.Group()
+        self.lights      = pg.sprite.Group()
         self.screen      = pg.display.set_mode((WIDTH, HEIGHT))
         
         # Flags
@@ -50,7 +61,7 @@ class Game:
             pg.joystick.init()
             self.controller = pg.joystick.Joystick(0)
             self.controller.init()
-            if self.controller.get_name().upper().strip() != "USB Gamepad".upper():
+            if self.controller.get_name().upper().strip() != 'USB Gamepad'.upper():
                 self.controller = None
         
         # Title screen
@@ -86,6 +97,42 @@ class Game:
         self.start_img = pg.transform.scale(self.start_img, (1380, 1080))
         self.death_img = pg.image.load(path.join(img_dir, Death_IMG)).convert_alpha()
         self.death_img = pg.transform.scale(self.death_img, (1380, 1080))
+        #self.ward1_img = pg.image.load(path.join(img_dir, WARD1_IMG)).convert_alpha()
+        #self.ward2_img = pg.image.load(path.join(img_dir, WARD2_IMG)).convert_alpha()
+
+        self.platform1_img = pg.image.load(path.join(img_dir, PLATFORM1_IMG)).convert_alpha()
+        self.platform1_img = pg.transform.scale(self.platform1_img, (200, 50))
+        self.platform2_img = pg.image.load(path.join(img_dir, PLATFORM2_IMG)).convert_alpha()
+        self.platform2_img = pg.transform.scale(self.platform2_img, (200, 50))
+        self.platform3_img = pg.image.load(path.join(img_dir, PLATFORM3_IMG)).convert_alpha()
+        self.platform3_img = pg.transform.scale(self.platform3_img, (200, 50))
+
+        self.bookcase_img = pg.image.load(path.join(img_dir, BOOKCASE_IMG)).convert_alpha()
+        self.bookcase_img = pg.transform.scale(self.bookcase_img, (300, 250))
+
+        self.wheelchair1_img = pg.image.load(path.join(img_dir, WHEELCHAIR_IMG)).convert_alpha()
+        self.wheelchair1_img = pg.transform.scale(self.wheelchair1_img, (200, 200))
+
+        self.wheelchair2_img = pg.image.load(path.join(img_dir, WHEELCHAIR_IMG2)).convert_alpha()
+        self.wheelchair2_img = pg.transform.scale(self.wheelchair2_img, (150, 150))
+
+        self.stretcher_img = pg.image.load(path.join(img_dir, STRETCHER_IMG)).convert_alpha()
+        self.stretcher_img = pg.transform.scale(self.stretcher_img, (350, 200))
+
+        self.light1_img = pg.image.load(path.join(img_dir, LIGHT_IMG)).convert_alpha()
+        self.light1_img = pg.transform.scale(self.light1_img, (75, 125))
+
+        self.light2_img = pg.image.load(path.join(img_dir, LIGHT2_IMG)).convert_alpha()
+        self.light2_img = pg.transform.scale(self.light2_img, (75, 125))
+
+        self.darkness_img = pg.image.load(path.join(img_dir, DARKNESS_IMG)).convert_alpha()
+        self.darkness_img = pg.transform.scale(self.darkness_img, (WIDTH, HEIGHT))
+
+        self.key_img = pg.image.load(path.join(img_dir, KEY_IMG)).convert_alpha()
+        self.key_img = pg.transform.scale(self.key_img, (50, 100))
+        
+        self.door_img = pg.image.load(path.join(img_dir, DOOR_IMG)).convert_alpha()
+        self.door_img = pg.transform.scale(self.door_img, (200, 350))
 
 # --NEW-- AFTER ENTERING A ROOM NEW IS CALLED -> RUN -> EVENTS & UPDATE & DRAW
     def lvl_init(self):
@@ -95,6 +142,7 @@ class Game:
         self.platforms.empty()
         self.powerups.empty()
         self.mobs.empty()
+        self.lights.empty()
         self.background.empty()
         self.player = Player(self)
 
@@ -104,29 +152,36 @@ class Game:
         Darkness(self)
         Floor(self)
         # Mob timer will be needed to spawn objects needing jumped/slid over/under:
-        self.mob_timer = 0
+        # self.mob_timer = 0 # now handled by LVL1_ENEMY_PERIOD
         self.lvl_run()
 
     def lvl_run(self):
         # Game Loop
         self.playing = True
+        start_ticks = pg.time.get_ticks()
 
         while self.playing:
             self.clock.tick(FPS)
             self.process_events()
-            self.lvl_update()
+            self.lvl_update(start_ticks)
             self.draw()
 
-    def lvl_update(self):
+    def lvl_update(self, start_ticks):
         # Game loop update
         # Update all content to be displayed to gamer
         self.all_sprites.update()
-        now = pg.time.get_ticks()
+        
+        # stuff won't spawn immediately if you've been playing for a while
+        # if we subtract the amount of ticks when the game was started
+        now = pg.time.get_ticks() - start_ticks
 
         # If we want to spawn additional objects to harm player:
-        if now - self.mob_timer > ENEMY_FREQ + random.choice([-1000, -500, 0, 500, 1000]):
-            self.mob_timer = now
+        if now % LVL1_ENEMY_PERIOD < 10: #- self.mob_timer > ENEMY_FREQ + random.choice([-1000, -500, 0, 500, 1000]):
+            # self.mob_timer = now
             Obstacles(self)
+
+        if now % LVL1_TIME_LIMIT < 10:
+            Key(self, WIDTH, HEIGHT / 2)
 
         # Check for platform collisions while falling
         self.platform_collision()
@@ -140,6 +195,10 @@ class Game:
                 mob.move((-max(abs(self.player.vel.x), 2), 0))
             for power in self.powerups:
                 power.move((-max(abs(self.player.vel.x), 2), 0))
+            for light in self.lights:
+                light.rect.x -= max(abs(self.player.vel.x), 2)
+                if light.rect.right < 0:
+                    light.kill()
             for plat in self.platforms:
                 plat.move((-max(abs(self.player.vel.x), 2), 0))
                 plat.rect.x -= max(abs(self.player.vel.x), 2)
@@ -157,16 +216,22 @@ class Game:
                     self.player.vel.x -= BOOST_POWER #/ 2
                     e.used = True
             else: # it's an enemy mob
+                self.level_state = LevelState.GAME_OVER
                 self.playing = False
                 break
 
         # Boost Collision
         pow_hits = pg.sprite.spritecollide(self.player, self.powerups, True)
         for pow in pow_hits:
-            if pow.type == "boost":
+            if pow.type == 'boost':
                 self.player.vel.x = BOOST_POWER
                 # Jumping through platforms when boosted will not snap to platform:
                 self.player.jumping = False
+            # TODO: perhaps don't immediately teleport the player to the level select
+            elif pow.type == 'key': # they won the level by collecting a key
+                self.level_state = LevelState.LEVEL_SELECT
+                self.playing = False
+                return
 
         # Need lvl_init platforms
         while len(self.platforms) < 8:
@@ -189,6 +254,10 @@ class Game:
         if len(self.background) < 2:
             Background(self)
 
+        # Need new lights
+        while len(self.lights) < 1:
+            Light(self, random.randrange(WIDTH + 100, 2 * WIDTH), random.randrange(0, 80))
+
         # Player Falls off Screen
         if self.player.rect.bottom > HEIGHT:
             for sprite in self.all_sprites:
@@ -196,6 +265,7 @@ class Game:
                 if sprite.rect.bottom > 0:
                     sprite.kill()
         if len(self.platforms) == 0:
+            self.level_state = LevelState.GAME_OVER
             self.playing = False
 
 # --LEVEL SELECT-- ROOM WITH 3 DOORS TO CHOOSE. LEVEL_SELECT IS CALLED ->
@@ -207,20 +277,22 @@ class Game:
         self.powerups.empty()
         self.walls.empty()
         self.doors.empty()
+        self.lights.empty()
         self.player = Player(self)
 
         # Draw central room with three doors to choose from:
         # Choosing doors in an inefficient way:
         if not self.door1_key:
             # If key 1 not picked up, draw it in central room:
-            Key(self, WIDTH / 2, HEIGHT / 8)
+            Key(self, WIDTH / 2, HEIGHT / 8 + 100)
 
-        Door(self, WIDTH / 8, HEIGHT - 50, 1, self.door1_key)
-        Door(self, WIDTH / 2, HEIGHT - 50, 2, self.door2_key)
-        Door(self, WIDTH - 100, HEIGHT - 50, 3, self.door3_key)
+        Door(self, WIDTH / 8, HEIGHT - 25, 1, self.door1_key)
+        Door(self, WIDTH / 2, HEIGHT - 25, 2, self.door2_key)
+        Door(self, WIDTH - 100, HEIGHT - 25, 3, self.door3_key)
         Wall(self, -225)
         Wall(self, WIDTH + 225)
         Floor(self)
+
         self.lvl_select_run()
 
     def lvl_select_run(self):
@@ -259,18 +331,24 @@ class Game:
         if door_hits and self.entering:
             for door in door_hits:
                 if not door.locked:
-                    if door.number == 1 and self.door1_fact:
-                        self.door_screen("Door 1 Random Facts and History.")
+                    if door.number == 1:
+                        if self.door1_fact:
+                            self.door_screen("Door 1 Random Facts and History.")
                         self.door1_fact = False
                         self.entering = False
-                    elif door.number == 2 and self.door2_fact:
-                        self.door_screen("Door 2 Random Facts and History.")
+                        self.level_state = LevelState.LEVEL_ONE
+                    elif door.number == 2:
+                        if self.door2_fact:
+                            self.door_screen("Door 2 Random Facts and History.")
                         self.door2_fact = False
                         self.entering = False
-                    elif door.number == 3 and self.door3_fact:
-                        self.door_screen("Door 3 Random Facts and History.")
+                        self.level_state = LevelState.LEVEL_TWO
+                    elif door.number == 3:
+                        if self.door3_fact:
+                            self.door_screen("Door 3 Random Facts and History.")
                         self.door3_fact = False
                         self.entering = False
+                        self.level_state = LevelState.LEVEL_THREE
                     self.playing = False
 
         # Check for wall interaction:
@@ -305,6 +383,8 @@ class Game:
                 power.move((-max(abs(self.player.vel.x), 2), 0))
             for wall in self.walls:
                 wall.move((-max(abs(self.player.vel.x), 2), 0))
+            for light in self.lights:
+                light.move((-max(abs(self.player.vel.x), 2), 0))
 
         # If player reaches leftmost 1/4 of screen
         if self.player.rect.centerx <= WIDTH / 4:
@@ -319,6 +399,8 @@ class Game:
                 power.move((max(abs(self.player.vel.x), 2), 0))
             for wall in self.walls:
                 wall.move((max(abs(self.player.vel.x), 2), 0))
+            for light in self.lights:
+                light.move((-max(abs(self.player.vel.x), 2), 0))
 
         # Player Falls off Screen
         if self.player.rect.bottom > HEIGHT:
@@ -327,6 +409,7 @@ class Game:
                 if sprite.rect.bottom > 0:
                     sprite.kill()
         if len(self.platforms) == 0:
+            self.level_state = LevelState.GAME_OVER
             self.playing = False
 
     def process_events(self):
@@ -437,7 +520,7 @@ class Game:
     def start_screen(self):
         # Start up screen
         self.screen.blit(self.start_img, [-25, -80])
-        self.draw_text("ASYLUM      ESCAPE", 150, GRAY, WIDTH / 2, HEIGHT / 8)
+        self.draw_text('ASYLUM      ESCAPE', 150, GRAY, WIDTH / 2, HEIGHT / 8)
         #self.draw_text("Left & Right Arrow Keys to Move & Up Arrow Key to Jump", 22, GRAY, WIDTH / 2, HEIGHT / 2)
         #self.draw_text("Down Arrow Key to Slide & i to Interact", 22, GRAY, WIDTH / 2, HEIGHT / 2 + 50)
         self.draw_text("Use Any Key to Enter!", 22, GRAY, WIDTH / 2, HEIGHT / 8 + 110)
@@ -468,11 +551,14 @@ class Game:
         if not self.running:
             # Player Closed Application, so skip the Game Over screen
             return
+
+        self.level_state = LevelState.LEVEL_SELECT
+
         self.screen.blit(self.death_img, [-25, -80])
-        self.draw_text("YOU ARE TRAPPED", 100, WHITE, WIDTH / 2, HEIGHT / 8)
+        self.draw_text('YOU ARE TRAPPED', 100, WHITE, WIDTH / 2, HEIGHT / 8)
         self.draw_text("SCORE: " + str(self.score), 22, WHITE, WIDTH / 2, HEIGHT / 4 + 25)
         self.draw_text("Want to Run Again?                                                   "
-                       "                Use Any Key to Play Again", 22, WHITE, WIDTH / 2, HEIGHT / 6 + 50)
+                       '                Use Any Key to Play Again', 22, WHITE, WIDTH / 2, HEIGHT / 6 + 50)
         if self.score > self.highscore:
             self.highscore = self.score
             self.draw_text("You Almost Escaped!", 35, WHITE, WIDTH / 2, HEIGHT / 4 + 95)
@@ -537,13 +623,27 @@ def main():
         g.intro_screen()
         
     while g.running:
-        g.lvl_select_init()
+        if g.level_state == LevelState.LEVEL_SELECT:
+            g.lvl_select_init()
+        elif g.level_state == LevelState.LEVEL_ONE:
+            g.lvl_init()
+        elif g.level_state == LevelState.LEVEL_TWO:
+            pass # TODO: implement level two
+        elif g.level_state == LevelState.LEVEL_THREE:
+            pass # TODO: implement level three
+        elif g.level_state == LevelState.GAME_OVER:
+            g.game_over_screen()
+
+        # g.lvl_select_init()
+        # if not g.running:
+        #     break;
+        # g.lvl_init()
+        # g.game_over_screen()
+
         if not g.running:
-            break;
-        g.lvl_init()
-        g.game_over_screen()
+            break
 
     pg.quit()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

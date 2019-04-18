@@ -46,7 +46,7 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         # Position, Velocity, and Acceleration Vectors for Movement
-        self.pos = vec(WIDTH / 2, HEIGHT / 2)
+        self.pos = vec(WIDTH / 2, HEIGHT / 2 + 200)
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
         
@@ -235,17 +235,9 @@ class Platform(pg.sprite.Sprite):
         self._layer = PLATFORM_LAYER
         pg.sprite.Sprite.__init__(self, game.all_sprites, game.platforms)
         self.game = game
-        # Use when sprites are available
-        '''
-        images = [self.game.spritesheet.get_image(400, 200, 200, 60),
-                  self.game.spritesheet.get_image(600, 200, 200, 90),
-                  self.game.spritesheet.get_image(0, 400, 200, 60)]
-        '''
-        #self.image = random.choice(images)
-        #self.image.set_colorkey(BLACK)
-        self.image = pg.Surface((200, 50))
-        self.image.fill(GRAY)
-
+        images = [self.game.platform1_img, self.game.platform2_img, self.game.platform3_img]
+        self.image = random.choice(images)
+        
         # Set up rect
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -257,6 +249,8 @@ class Platform(pg.sprite.Sprite):
         # Randomly generate a boost with a newly spawned platform:
         if random.randrange(100) < POWER_SPAWN:
             Power(self.game, self)
+        if random.randrange(100) < COLLIDE_SPAWN:
+            Obstacles(self.game, self)
 
     def move(self, amt):
         self.pos += amt
@@ -316,6 +310,24 @@ class Wall(pg.sprite.Sprite):
         self.pos += amt
         self.rect.centerx = self.pos.x
         self.rect.centery = self.pos.y
+        
+class Light(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self._layer = ENEMY_LAYER
+        self.groups = game.all_sprites, game.lights
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        # Use when sprites are available
+        images = [self.game.light1_img, self.game.light2_img]
+        self.image = random.choice(images)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        
+    def move(self, amt):
+        self.pos += amt
+        self.rect.centerx = self.pos.x
+        self.rect.bottom = self.pos.y
 
 class Power(pg.sprite.Sprite):
     # Not sure if we want to add a power feature, like a boost?
@@ -380,19 +392,7 @@ class Darkness(pg.sprite.Sprite):
         self.game = game
         self.current_frame = 0
         self.last_update = 0
-
-        # Use when spritesheet ready:
-        '''
-        self.images = [self.game.spritesheet.get_image(200, 400, 200, 200),
-                       self.game.spritesheet.get_image(400, 400, 200, 200),
-                       self.game.spritesheet.get_image(600, 400, 200, 200)]
-        for frame in self.images:
-            frame.set_colorkey(BLACK)
-        self.image = self.images[self.current_frame]
-        '''
-        self.image = pg.Surface((200, HEIGHT))
-        self.image.fill(BLACK)
-
+        self.image = self.game.darkness_img
         self.rect = self.image.get_rect()
         self.rect.centerx = -500
         #self.rect.centerx = random.choice([-100, WIDTH + 100])
@@ -435,27 +435,21 @@ class Darkness(pg.sprite.Sprite):
         self.rect.y = self.pos.y
 
 class Obstacles(pg.sprite.Sprite):
-    def __init__(self, game):
+    def __init__(self, game, plat):
         self._layer = OBSTACLE_LAYER
         pg.sprite.Sprite.__init__(self, game.all_sprites, game.mobs)
         self.game = game
+        self.plat = plat
         self.current_frame = 0
         self.last_update = 0
 
-        # Use when spritesheet ready:
-        '''
-        self.images = [self.game.spritesheet.get_image(200, 400, 200, 200),
-                       self.game.spritesheet.get_image(400, 400, 200, 200),
-                       self.game.spritesheet.get_image(600, 400, 200, 200)]
-        for frame in self.images:
-            frame.set_colorkey(BLACK)
-        self.image = self.images[self.current_frame]
-        '''
-        self.image = pg.Surface((random.randrange(100, 150), (random.randrange(75, 100))))
-        self.image.fill(RED)
+        self.images = [self.game.bookcase_img, self.game.wheelchair1_img, self.game.wheelchair2_img,
+                       self.game.stretcher_img]
+        self.image = random.choice(self.images)
         self.rect = self.image.get_rect()
-        self.rect.centerx = random.randrange(WIDTH + 100, WIDTH + 250)
-        self.rect.centery = random.randrange(0, HEIGHT - 100)
+        self.rect.centerx = self.plat.rect.centerx
+        self.rect.bottom = self.plat.rect.top + 20
+       
         # Can make objects that fall, chase, etc, with the following parameters, just modify Collide_Object __init__:
         #self.vx = random.randrange(1, 4)
         #if self.rect.centerx > WIDTH:
@@ -472,9 +466,7 @@ class Obstacles(pg.sprite.Sprite):
 
     def update(self):
         now = pg.time.get_ticks()
-        self.rect.x += self.vx
-        self.vy += self.dy
-        center = self.rect.center
+        self.rect.bottom = self.plat.rect.top + 20
         '''
         if now - self.last_update > 200:
             self.last_update = now
@@ -484,13 +476,13 @@ class Obstacles(pg.sprite.Sprite):
         '''
         # Advanced collision mask, if we want a specific object (wheel chairs, patient beds, saw?) and player hitbox:
         self.mask = pg.mask.from_surface(self.image)
-        self.rect.center = center
-        self.rect.y += self.vy
+        #self.rect.center = center
+        #self.rect.y += self.vy
         # For objects that fall or rise, need them to be destroyed:
-        if self.rect.top > HEIGHT or self.rect.bottom < -50:
-            self.kill()
-        if self.rect.right < 0:
-            self.kill()
+        #if self.rect.top > HEIGHT or self.rect.bottom < -50:
+        #    self.kill()
+        #if self.rect.right < 0:
+        #    self.kill()
 
         if self.used and not self._used_indicator: # only complete this fill once
             self.image.fill(DARK_RED)
@@ -512,17 +504,7 @@ class Door(pg.sprite.Sprite):
         self.current_frame = 0
         self.last_update = 0
 
-        # Use when spritesheet ready:
-        '''
-        self.images = [self.game.spritesheet.get_image(200, 400, 200, 200),
-                       self.game.spritesheet.get_image(400, 400, 200, 200),
-                       self.game.spritesheet.get_image(600, 400, 200, 200)]
-        for frame in self.images:
-            frame.set_colorkey(BLACK)
-        self.image = self.images[self.current_frame]
-        '''
-        self.image = pg.Surface((150, 300))
-        self.image.fill(BROWN)
+        self.image = self.game.door_img
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
@@ -554,24 +536,7 @@ class Key(pg.sprite.Sprite):
         # Key animation?
         self.current_frame = 0
         self.last_update = 0
-        # When and if sprite is made for key:
-        '''
-        self.image_choice = random.randrange(1, 3)
-        if self.image_choice == 1:
-            self.images = [self.game.spritesheet.get_image(600, 0, 200, 190),
-                           self.game.spritesheet.get_image(600, 600, 200, 190)]
-        else:
-            self.images = [self.game.spritesheet.get_image(0, 600, 200, 200),
-                           self.game.spritesheet.get_image(200, 600, 200, 200)]
-
-        for frame in self.images:
-            frame.set_colorkey(BLACK)
-        # self.image = random.choice(self.images)
-        self.image = self.images[self.current_frame]
-        '''
-        self.image = pg.Surface((15, 30))
-        self.image.fill(YELLOW)
-
+        self.image = self.game.key_img
         # Set up rect
         self.rect = self.image.get_rect()
         self.rect.centerx = x
@@ -579,6 +544,8 @@ class Key(pg.sprite.Sprite):
 
         # Float representation of position
         self.pos = vec(x, y)
+
+        self.type = 'key'
 
     def update(self):
         now = pg.time.get_ticks()
