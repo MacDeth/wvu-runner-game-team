@@ -10,6 +10,22 @@ HS_FILE = "CS475_Asylum_Progress.txt"
 SPRITE_FILE = "Player.png"
 START_IMG = 'AsylumHomeStart.jpg'
 Death_IMG = 'AsylumHomeDeath.jpg'
+DARKNESS_IMG = 'darkness.png'
+DOOR_IMG = 'Door.png'
+KEY_IMG = 'Key.png'
+PLATFORM1_IMG = 'platform1.png'
+PLATFORM2_IMG = 'platform2.png'
+PLATFORM3_IMG = 'platform3.png'
+
+# Level 1 Assets
+#WARD1_IMG = 'Ward1.png'
+#WARD2_IMG = 'Ward2.png'
+BOOKCASE_IMG = 'BookCase.png'
+LIGHT_IMG = 'light1.png'
+LIGHT2_IMG = 'light2.png'
+WHEELCHAIR_IMG = 'Wheelchair.png'
+WHEELCHAIR_IMG2 = 'Wheelchair2.png'
+STRETCHER_IMG = 'Stretcher.png'
 
 # Colors
 WHITE = (255, 255, 255)
@@ -33,6 +49,7 @@ PLAYER_JUMP = 30
 # Power Up Boosts
 BOOST_POWER = 30
 POWER_SPAWN = 10
+COLLIDE_SPAWN = 10
 
 # Collide Object Spawn (Wheel Chairs, etc)
 LVL1_ENEMY_PERIOD = 3000
