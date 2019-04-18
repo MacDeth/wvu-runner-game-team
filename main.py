@@ -6,9 +6,10 @@
 # Made in Python 3.6
 import pygame as pg
 import random
-from os import path
+from os import path, listdir
 from entities import *
 from constants import *
+from os.path import isfile
 
 class Game:
     def __init__(self):
@@ -23,7 +24,6 @@ class Game:
         self.walls       = pg.sprite.Group()
         self.doors       = pg.sprite.Group()
         self.mobs        = pg.sprite.Group()
-        self.background  = pg.sprite.Group()
         self.screen      = pg.display.set_mode((WIDTH, HEIGHT))
         
         # Flags
@@ -36,6 +36,7 @@ class Game:
         self.door1_fact  = True
         self.door2_fact  = True
         self.door3_fact  = True
+        self.curr_level  = 1;
         
         self.clock = pg.time.Clock()
         self.last_update = 0
@@ -66,15 +67,17 @@ class Game:
                 self.highscore = int(file.read())
             except:
                 self.highscore = 0
-
+                
         # Background Object Image Loading:
-        self.background_images = []
-        '''
-        for i in range(1, 4):
-            self.background_images.append(pg.image.load(path.join(img_dir, 'XXXX.png'.format(i))).convert())
-        # Loading Image
-        self.spritesheet = Spritesheet(path.join(img_dir, SPRITE_FILE))
-        '''
+        bckgrd_dir = path.join(img_dir, 'background')
+        self.background_images = [pg.transform.scale(
+            pg.image.load(path.join(bckgrd_dir, filename)).convert(),
+            (WIDTH, HEIGHT + 50))
+                                  for filename in listdir(bckgrd_dir)]
+        
+#         for i in range(1, 4):
+#             self.background_images.append(pg.image.load(path.join(img_dir, '.png'.format(i))).convert())
+            
         # Loading Spritesheet Image
         self.spritesheet = Spritesheet(path.join(img_dir, SPRITE_FILE))
 
@@ -172,6 +175,19 @@ class Game:
             Platform(self, random.randrange(WIDTH, WIDTH + width), random.randrange(200, HEIGHT - 100))
             # More runner like:
             #Platform(self, WIDTH + 50, HEIGHT - 50)
+            
+        # Spawn background
+        bckgrd_sprites = self.background.sprites()
+        
+        # Initial background
+        if len(bckgrd_sprites) is 0:
+            bckgrd = Background(self)
+            bckgrd.rect.x = 0
+            bckgrd.pos.x = 0.0;
+        
+        # Subsequent Backgrounds
+        if len(self.background) < 2:
+            Background(self)
 
         # Player Falls off Screen
         if self.player.rect.bottom > HEIGHT:

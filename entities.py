@@ -209,12 +209,13 @@ class Background(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, game.all_sprites, game.background)
         self.game = game
         # Choose a random background object to display, use when sprites are done
-        #self.image = random.choice(self.game.web_images)
-        self.image.set_colorkey(BLACK)
+        self.image = random.choice(self.game.background_images)
+        self.image.set_colorkey(WHITE)
         self.rect = self.image.get_rect()
         # My background images were 800 x 800 and I wanted them aligned to the square game field:
-        self.rect.x = 0
-        self.rect.y = -800
+        # Spawn offscreen
+        self.rect.x = WIDTH + 10
+#         self.rect.y = -800
 
         # Float representation of position
         self.pos = vec(self.rect.x, self.rect.y)
