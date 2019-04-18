@@ -35,7 +35,10 @@ BOOST_POWER = 30
 POWER_SPAWN = 10
 
 # Collide Object Spawn (Wheel Chairs, etc)
-ENEMY_FREQ = 6000
+LVL1_ENEMY_PERIOD = 3000
+
+# Key Spawn
+LVL1_TIME_LIMIT = 10 * LVL1_ENEMY_PERIOD
 
 # Managing Sprite Layering for when Drawn
 BACK_ART_LAYER = 0
