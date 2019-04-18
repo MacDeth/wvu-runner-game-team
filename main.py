@@ -174,9 +174,9 @@ class Game:
         now = pg.time.get_ticks() - start_ticks
 
         # If we want to spawn additional objects to harm player:
-        if now % LVL1_ENEMY_PERIOD < 10: #- self.mob_timer > ENEMY_FREQ + random.choice([-1000, -500, 0, 500, 1000]):
+        #if now % LVL1_ENEMY_PERIOD < 10: #- self.mob_timer > ENEMY_FREQ + random.choice([-1000, -500, 0, 500, 1000]):
             # self.mob_timer = now
-            Obstacles(self)
+        #    Obstacles(self)
 
         if now % LVL1_TIME_LIMIT < 10:
             Key(self, WIDTH, HEIGHT / 2)
