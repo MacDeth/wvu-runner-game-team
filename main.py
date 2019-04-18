@@ -237,7 +237,7 @@ class Game:
 
         # Need lvl_init platforms
 
-        while len(self.platforms) < 8:
+        while len(self.platforms) < 10:
             #width = random.randrange(50, 800)
             # More platformer like:
             #Platform(self, random.randrange(WIDTH, WIDTH + width), random.randrange(200, HEIGHT - 100))
@@ -249,7 +249,9 @@ class Game:
             height = random.randrange(200, HEIGHT - 50)
             flag = True
             for plat in self.platforms:
-                if (width <= plat.rect.x + 200 and width >= plat.rect.x - 200): #or (height <= plat.rect.y + 50 and height >= plat.rect.y - 50):
+                if (width <= plat.rect.x + 200 and width >= plat.rect.x - 200):
+                    if (height >= plat.rect.y + 100 or height <= plat.rect.y - 100):
+                        continue #or (height <= plat.rect.y + 50 and height >= plat.rect.y - 50):
                     flag = False
                     break
 
