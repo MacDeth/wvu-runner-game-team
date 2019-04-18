@@ -214,6 +214,8 @@ class Game:
                 # change the state of the obstacle to "used"
                 if not e.used:
                     self.player.vel.x -= BOOST_POWER #/ 2
+                    if self.player.vel.x < 0:
+                        self.player.vel.x = 0
                     e.used = True
             else: # it's an enemy mob
                 self.level_state = LevelState.GAME_OVER
@@ -234,13 +236,26 @@ class Game:
                 return
 
         # Need lvl_init platforms
+
         while len(self.platforms) < 8:
-            width = random.randrange(50, 800)
+            #width = random.randrange(50, 800)
             # More platformer like:
-            Platform(self, random.randrange(WIDTH, WIDTH + width), random.randrange(200, HEIGHT - 100))
+            #Platform(self, random.randrange(WIDTH, WIDTH + width), random.randrange(200, HEIGHT - 100))
             # More runner like:
             #Platform(self, WIDTH + 50, HEIGHT - 50)
-            
+            #More Consistent Spawning?
+            #Platform(self, random.randrange(WIDTH - 200, WIDTH + width), random.randrange(200, HEIGHT - 100))
+            width = random.randrange(WIDTH + 50, WIDTH * 2)
+            height = random.randrange(200, HEIGHT - 50)
+            flag = True
+            for plat in self.platforms:
+                if (width <= plat.rect.x + 200 and width >= plat.rect.x - 200): #or (height <= plat.rect.y + 50 and height >= plat.rect.y - 50):
+                    flag = False
+                    break
+
+            if flag:
+                Platform(self,width,height)
+
         # Spawn background
         bckgrd_sprites = self.background.sprites()
         
@@ -403,7 +418,7 @@ class Game:
                 light.move((-max(abs(self.player.vel.x), 2), 0))
 
         # Player Falls off Screen
-        if self.player.rect.bottom > HEIGHT:
+        if self.player.rect.bottom - 50 > HEIGHT:
             for sprite in self.all_sprites:
                 sprite.rect.y -= max(self.player.vel.y, 10)
                 if sprite.rect.bottom > 0:
@@ -600,9 +615,9 @@ class Game:
                 for hit in hits:
                     if hit.rect.bottom > lower_platform.rect.bottom:
                         lower_platform = hit
-                if self.player.pos.x < lower_platform.rect.right + 10 and self.player.pos.x > lower_platform.rect.left - 10:
+                if self.player.pos.x < lower_platform.rect.right + 100 and self.player.pos.x > lower_platform.rect.left - 100:
                     # Only move to platform top if feet higher than platform top
-                    if self.player.pos.y < lower_platform.rect.bottom:
+                    if self.player.pos.y <= lower_platform.rect.bottom:
                         self.player.pos.y = lower_platform.rect.top + 1
                         self.player.rect.midbottom = self.player.pos
                         self.player.vel.y = 0
