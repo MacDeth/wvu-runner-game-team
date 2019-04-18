@@ -475,13 +475,13 @@ class Obstacles(pg.sprite.Sprite):
         '''
         # Advanced collision mask, if we want a specific object (wheel chairs, patient beds, saw?) and player hitbox:
         self.mask = pg.mask.from_surface(self.image)
-        self.rect.center = center
-        self.rect.y += self.vy
+        #self.rect.center = center
+        #self.rect.y += self.vy
         # For objects that fall or rise, need them to be destroyed:
-        if self.rect.top > HEIGHT or self.rect.bottom < -50:
-            self.kill()
-        if self.rect.right < 0:
-            self.kill()
+        #if self.rect.top > HEIGHT or self.rect.bottom < -50:
+        #    self.kill()
+        #if self.rect.right < 0:
+        #    self.kill()
 
         if self.used and not self._used_indicator: # only complete this fill once
             self.image.fill(DARK_RED)
