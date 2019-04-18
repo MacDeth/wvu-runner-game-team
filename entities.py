@@ -46,7 +46,7 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         # Position, Velocity, and Acceleration Vectors for Movement
-        self.pos = vec(WIDTH / 2, HEIGHT / 2)
+        self.pos = vec(WIDTH / 2, HEIGHT / 2 + 200)
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
         
