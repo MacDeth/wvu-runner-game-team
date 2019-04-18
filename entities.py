@@ -271,7 +271,7 @@ class Floor(pg.sprite.Sprite):
         #self.image = random.choice(images)
         #self.image.set_colorkey(BLACK)
         self.image = pg.Surface((WIDTH + 300, 50))
-        self.image.fill(GRAY)
+        self.image.fill(BLACK)
         self.rect = self.image.get_rect()
         self.rect.x = -150
         self.rect.y = HEIGHT - 50
