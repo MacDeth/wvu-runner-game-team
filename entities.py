@@ -579,6 +579,8 @@ class Key(pg.sprite.Sprite):
         # Float representation of position
         self.pos = vec(x, y)
 
+        self.type = 'key'
+
     def update(self):
         now = pg.time.get_ticks()
         #if now - self.last_update > 200:
