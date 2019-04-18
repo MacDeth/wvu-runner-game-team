@@ -249,7 +249,7 @@ class Platform(pg.sprite.Sprite):
         if random.randrange(100) < POWER_SPAWN:
             Power(self.game, self)
         if random.randrange(100) < COLLIDE_SPAWN:
-            Collide_Objects(self.game, self)
+            Obstacles(self.game, self)
 
     def move(self, amt):
         self.pos += amt
