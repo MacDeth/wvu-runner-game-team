@@ -51,11 +51,11 @@ BOOST_POWER = 30
 POWER_SPAWN = 10
 COLLIDE_SPAWN = 10
 
-# Collide Object Spawn (Wheel Chairs, etc)
-LVL1_ENEMY_PERIOD = 3000
-
-# Key Spawn
-LVL1_TIME_LIMIT = 10 * LVL1_ENEMY_PERIOD
+# Key Spawn time, in milliseconds
+LVL1_TIME_LIMIT = 60 * 1000 # a minute
+LVL2_TIME_LIMIT = LVL1_TIME_LIMIT * 2 # two minutes
+LVL3_TIME_LIMIT = LVL2_TIME_LIMIT * 2 # four minutes
+KEY_RETRY = 10 * 1000 # ten seconds
 
 # Managing Sprite Layering for when Drawn
 BACK_ART_LAYER = 0
