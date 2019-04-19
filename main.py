@@ -50,7 +50,7 @@ class Game:
         
         self.clock = pg.time.Clock()
         self.last_update = 0
-        self.score = 0;
+        self.score = 0
         
         # Load assets scores and save
         self.load_data()
@@ -180,7 +180,12 @@ class Game:
             # self.mob_timer = now
         #    Obstacles(self)
 
-        if now % LVL1_TIME_LIMIT < 10:
+        if (self.level_state == LevelState.LEVEL_ONE and \
+                now >= LVL1_TIME_LIMIT and now % KEY_RETRY <= 45) or \
+                (self.level_state == LevelState.LEVEL_TWO and \
+                now >= LVL2_TIME_LIMIT and now % KEY_RETRY <= 45) or \
+                (self.level_state == LevelState.LEVEL_THREE and \
+                now >= LVL3_TIME_LIMIT and now % KEY_RETRY <= 45):
             Key(self, WIDTH, HEIGHT / 2)
 
         # Check for platform collisions while falling
@@ -231,6 +236,12 @@ class Game:
                 self.player.jumping = False
             # TODO: perhaps don't immediately teleport the player to the level select
             elif pow.type == 'key': # they won the level by collecting a key
+                if self.level_state == LevelState.LEVEL_ONE:
+                    self.door2_key = True # collecting a key in lvl1 lets you enter lvl2
+                elif self.level_state == LevelState.LEVEL_TWO:
+                    self.door3_key = True # collecting a key in lvl2 lets you enter lvl3
+
+                # bring them back to the level selection screen
                 self.level_state = LevelState.LEVEL_SELECT
                 self.playing = False
                 return
@@ -265,8 +276,8 @@ class Game:
         if len(bckgrd_sprites) is 0:
             bckgrd = Background(self)
             bckgrd.rect.x = 0
-            bckgrd.pos.x = 0.0;
-        
+            bckgrd.pos.x = 0.0
+
         # Subsequent Backgrounds
         if len(self.background) < 2:
             Background(self)
@@ -321,7 +332,7 @@ class Game:
             self.process_events()
             self.lvl_select_update()
             if not self.playing:
-                break;
+                break
             self.draw()
 
     def lvl_select_update(self):
@@ -643,18 +654,16 @@ def main():
     while g.running:
         if g.level_state == LevelState.LEVEL_SELECT:
             g.lvl_select_init()
-        elif g.level_state == LevelState.LEVEL_ONE:
+        elif g.level_state == LevelState.LEVEL_ONE or \
+                g.level_state == LevelState.LEVEL_TWO or \
+                g.level_state == LevelState.LEVEL_THREE:
             g.lvl_init()
-        elif g.level_state == LevelState.LEVEL_TWO:
-            pass # TODO: implement level two
-        elif g.level_state == LevelState.LEVEL_THREE:
-            pass # TODO: implement level three
         elif g.level_state == LevelState.GAME_OVER:
             g.game_over_screen()
 
         # g.lvl_select_init()
         # if not g.running:
-        #     break;
+        #     break
         # g.lvl_init()
         # g.game_over_screen()
 
