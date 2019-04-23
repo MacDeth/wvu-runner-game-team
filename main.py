@@ -37,16 +37,18 @@ class Game:
         self.lights      = pg.sprite.Group()
         self.screen      = pg.display.set_mode((WIDTH, HEIGHT))
         
-        # Flags
-        self.running     = True
-        self.interacting = False
-        self.entering    = False
-        self.door1_key   = False
-        self.door2_key   = False
-        self.door3_key   = False
-        self.door1_fact  = True
-        self.door2_fact  = True
-        self.door3_fact  = True
+        # Flag         Bit  Default
+        # playing     = 9      0
+        # running     = 8      1
+        # interacting = 7      0
+        # entering    = 6      0
+        # door1_key   = 5      0
+        # door2_key   = 4      0
+        # door3_key   = 3      0
+        # door1_fact  = 2      1
+        # door2_fact  = 1      1
+        # door3_fact  = 0      1
+        self.flags = 263
         
         self.clock = pg.time.Clock()
         self.last_update = 0
@@ -157,10 +159,12 @@ class Game:
 
     def lvl_run(self):
         # Game Loop
-        self.playing = True
+        # playing = True
+        self.flags = self.flags | 512
         start_ticks = pg.time.get_ticks()
-
-        while self.playing:
+        
+        # while playing
+        while (self.flags & 512):
             self.clock.tick(FPS)
             self.process_events()
             self.lvl_update(start_ticks)
@@ -224,7 +228,8 @@ class Game:
                     e.used = True
             else: # it's an enemy mob
                 self.level_state = LevelState.GAME_OVER
-                self.playing = False
+                # playing = False
+                self.flags = self.flags & ~512
                 break
 
         # Boost Collision
@@ -237,13 +242,19 @@ class Game:
             # TODO: perhaps don't immediately teleport the player to the level select
             elif pow.type == 'key': # they won the level by collecting a key
                 if self.level_state == LevelState.LEVEL_ONE:
-                    self.door2_key = True # collecting a key in lvl1 lets you enter lvl2
+                    # collecting a key in lvl1 lets you enter lvl2
+                    # door2_key = True 
+                    self.flags = self.flags | 16
                 elif self.level_state == LevelState.LEVEL_TWO:
-                    self.door3_key = True # collecting a key in lvl2 lets you enter lvl3
+                    # collecting a key in lvl2 lets you enter lvl3
+                    # door3_key = true
+                    self.flags = self.flags | 8 
 
                 # bring them back to the level selection screen
                 self.level_state = LevelState.LEVEL_SELECT
-                self.playing = False
+                
+                # playing = False
+                self.flags = self.flags & ~512
                 return
 
         # Need lvl_init platforms
@@ -294,7 +305,8 @@ class Game:
                     sprite.kill()
         if len(self.platforms) == 0:
             self.level_state = LevelState.GAME_OVER
-            self.playing = False
+            # playing = False
+            self.flags = self.flags & ~512
 
 # --LEVEL SELECT-- ROOM WITH 3 DOORS TO CHOOSE. LEVEL_SELECT IS CALLED ->
     # LVL_SELECT_RUN -> EVENTS & LVL_SELECT_UPDATE & LVL_SELECT_DRAW
@@ -310,13 +322,14 @@ class Game:
 
         # Draw central room with three doors to choose from:
         # Choosing doors in an inefficient way:
-        if not self.door1_key:
+        # door1_key
+        if not (self.flags & 32):
             # If key 1 not picked up, draw it in central room:
             Key(self, WIDTH / 2, HEIGHT / 8 + 100)
 
-        Door(self, WIDTH / 8, HEIGHT - 25, 1, self.door1_key)
-        Door(self, WIDTH / 2, HEIGHT - 25, 2, self.door2_key)
-        Door(self, WIDTH - 100, HEIGHT - 25, 3, self.door3_key)
+        Door(self, WIDTH / 8, HEIGHT - 25, 1, (self.flags & 32) is 32) # door1_key
+        Door(self, WIDTH / 2, HEIGHT - 25, 2, (self.flags & 16) is 16) # door2_key
+        Door(self, WIDTH - 100, HEIGHT - 25, 3, (self.flags & 8) is 8) #door3_key
         Wall(self, -225)
         Wall(self, WIDTH + 225)
         Floor(self)
@@ -325,13 +338,17 @@ class Game:
 
     def lvl_select_run(self):
         # Game Loop
-        self.playing = True
-
-        while self.playing:
+        # playing = True
+        self.flags = self.flags | 512
+        
+        # while playing
+        while (self.flags & 512):
             self.clock.tick(FPS)
             self.process_events()
             self.lvl_select_update()
-            if not self.playing:
+            
+            # not playing
+            if not (self.flags & 512):
                 break
             self.draw()
 
@@ -343,41 +360,59 @@ class Game:
         # Key Collision
         key_hits = pg.sprite.spritecollide(self.player, self.powerups, True)
         if key_hits:
-            self.door1_key = True
+            # door1_key = True
+            self.flags = self.flags | 32
 
         # With key player enters door, if correct key permits:
         door_hits = pg.sprite.spritecollide(self.player, self.doors, False)
-        if door_hits and self.interacting:
+        
+        # door_hits is truthy and self.interacting == true
+        if door_hits and (self.flags & 128):
             for door in door_hits:
-                if door.number == 1 and self.door1_key:
+                if door.number == 1 and (self.flags & 32): # door1_key
                     door.locked = False
-                elif door.number == 2 and self.door2_key:
+                elif door.number == 2 and (self.flags & 16): # door2_key
                     door.locked = False
-                elif door.number == 3 and self.door3_key:
+                elif door.number == 3 and (self.flags & 8): # door3_key
                     door.locked = False
-
-        if door_hits and self.entering:
+                    
+        # door_hits is truthy and entering == true
+        if door_hits and (self.flags & 64):
             for door in door_hits:
                 if not door.locked:
                     if door.number == 1:
-                        if self.door1_fact:
+                        # door1_fact
+                        if (self.flags & 4):
                             self.door_screen("Door 1 Random Facts and History.")
-                        self.door1_fact = False
-                        self.entering = False
+                        
+                        # door1_fact = False
+                        self.flags = self.flags & ~4
+                        
+                        # entering = False
+                        self.flags = self.flags & ~64
                         self.level_state = LevelState.LEVEL_ONE
                     elif door.number == 2:
-                        if self.door2_fact:
+                        # door2_fact
+                        if (self.flags & 2):
                             self.door_screen("Door 2 Random Facts and History.")
-                        self.door2_fact = False
-                        self.entering = False
+                        # door2_fact = False
+                        self.flags = self.flags & ~2
+                        
+                        # entering = False
+                        self.flags = self.flags & ~64
                         self.level_state = LevelState.LEVEL_TWO
                     elif door.number == 3:
-                        if self.door3_fact:
+                        # door3_fact
+                        if (self.flags & 1):
                             self.door_screen("Door 3 Random Facts and History.")
-                        self.door3_fact = False
-                        self.entering = False
+                        # door3_fact = False
+                        self.flags = self.flags & ~1
+                        
+                        # entering = False
+                        self.flags = self.flags & ~64
                         self.level_state = LevelState.LEVEL_THREE
-                    self.playing = False
+                    # playing = False
+                    self.flags = self.flags & ~512
 
         # Check for wall interaction:
         wall_hits = pg.sprite.spritecollide(self.player, self.walls, False)
@@ -438,7 +473,8 @@ class Game:
                     sprite.kill()
         if len(self.platforms) == 0:
             self.level_state = LevelState.GAME_OVER
-            self.playing = False
+            # playing = False
+            self.flags = self.flags & ~512
 
     def process_events(self):
         # Game loop process_events
@@ -486,46 +522,57 @@ class Game:
 
             # Check for quitting game event:
             if event.type == pg.QUIT:
-                self.playing = False
-                self.running = False
+                # playing = False
+                self.flags = self.flags & ~512
+                
+                # Running flag = false
+                self.flags = self.flags & ~256 
 
             # Check for interacting:
             # Controller
             if event.type == pg.JOYBUTTONDOWN:
                 if event.button == controller.BUTTON_Y:
-                    self.interacting = True
+                    # interacting = true
+                    self.flags = self.flags | 128
                     
             if event.type == pg.JOYBUTTONUP:
                 if event.button == controller.BUTTON_Y:
-                    self.interacting = False
+                    # interacting = false
+                    self.flags = self.flags & ~128
                     
             # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_i:
-                    self.interacting = True
+                    # interacting = true
+                    self.flags = self.flags | 128
 
             if event.type == pg.KEYUP:
                 if event.key == pg.K_i:
-                    self.interacting = False
+                    # interacting = false
+                    self.flags = self.flags & ~128
 
             # Check for entering:
             # Controller
             if event.type == pg.JOYBUTTONDOWN:
                 if event.button == controller.BUTTON_X:
-                    self.entering = True
+                    # entering = True
+                    self.flags = self.flags | 64
                     
             if event.type == pg.JOYBUTTONUP:
                 if event.button == controller.BUTTON_X:
-                    self.entering = False
+                    # entering = False
+                    self.flags = self.flags & ~64
                     
             # Keyboard
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_e:
-                    self.entering = True
+                    # entering = True
+                    self.flags = self.flags | 64
 
             if event.type == pg.KEYUP:
                 if event.key == pg.K_e:
-                    self.entering = False
+                    # entering = False
+                    self.flags = self.flags & ~64
 
     def draw(self):
         # Draw background and sprites:
@@ -536,7 +583,8 @@ class Game:
         # Doors for level select
         if self.doors:
             door_hits = pg.sprite.spritecollide(self.player, self.doors, False)
-            if door_hits and self.interacting:
+            # door_hits is truthy and self.interacting == true
+            if door_hits and (self.flags & 128):
                 for door in door_hits:
                     if door.locked:
                         self.draw_text("Locked.", 22, BLACK, door.rect.centerx, door.rect.bottom - 350)
@@ -577,7 +625,7 @@ class Game:
 
     def game_over_screen(self):
         # Game over screen only if you lose, not if you close program
-        if not self.running:
+        if not (self.flags & 256):
             # Player Closed Application, so skip the Game Over screen
             return
 
@@ -607,7 +655,8 @@ class Game:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     waiting = False
-                    self.running = False
+                    # Running = false
+                    self.flags = self.flags & ~256
                 if event.type == pg.KEYDOWN:
                     waiting = False
                 if event.type == pg.JOYBUTTONDOWN:
@@ -644,14 +693,13 @@ def main():
 
     # --CREATE GAME AND GO THROUGH EVENTS--
     g = Game()
-    
-    if g.running:
+    if (g.flags & 256):
         g.start_screen()
     
-    if g.running:
+    if (g.flags & 256):
         g.intro_screen()
         
-    while g.running:
+    while (g.flags & 256):
         if g.level_state == LevelState.LEVEL_SELECT:
             g.lvl_select_init()
         elif g.level_state == LevelState.LEVEL_ONE or \
@@ -667,7 +715,7 @@ def main():
         # g.lvl_init()
         # g.game_over_screen()
 
-        if not g.running:
+        if not (g.flags & 256):
             break
 
     pg.quit()
