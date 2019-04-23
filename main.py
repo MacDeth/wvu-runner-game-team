@@ -95,6 +95,8 @@ class Game:
         self.locked_sound = pg.mixer.Sound(path.join(self.snd_dir, 'locked.wav'))
         self.unlocked_sound = pg.mixer.Sound(path.join(self.snd_dir, 'opendoor.wav'))
         self.key_sound = pg.mixer.Sound(path.join(self.snd_dir, 'key.wav'))
+        self.intro_sound = pg.mixer.Sound(path.join(self.snd_dir, 'intro_song.wav'))
+        self.gameplay_sound = pg.mixer.Sound(path.join(self.snd_dir, 'gameplay_sound.wav'))
             
         # Loading Spritesheet Image
         self.spritesheet = Spritesheet(path.join(img_dir, SPRITE_FILE))
@@ -566,10 +568,14 @@ class Game:
         self.draw_text("Use Any Key to Enter!", 22, GRAY, WIDTH / 2, HEIGHT / 8 + 110)
         self.draw_text("High Score: " + str(self.highscore), 22, GRAY, WIDTH / 2, 15)
         pg.display.flip()
+        pg.mixer.music.load(path.join(self.snd_dir, 'intro_song.wav'))
+        pg.mixer.music.play(loops=-1)
         self.wait_for_key()
 
     def intro_screen(self):
         # After start screen.
+        pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
+        pg.mixer.music.play(loops=-1)
         self.screen.fill(BGCOLOR)
         self.draw_text("You took the dare to explore the building knowing it is off limits.", 22, BLACK, WIDTH / 2, HEIGHT / 2 - 25)
         self.draw_text("Upon entering, the floor gave and you fell into a room of three doors.", 22, BLACK, WIDTH / 2, HEIGHT / 2)
@@ -593,7 +599,8 @@ class Game:
             return
 
         self.level_state = LevelState.LEVEL_SELECT
-
+        pg.mixer.music.load(path.join(self.snd_dir, 'intro_song.wav'))
+        pg.mixer.music.play(loops=-1)
         self.screen.blit(self.death_img, [-25, -80])
         self.draw_text('YOU ARE TRAPPED', 100, WHITE, WIDTH / 2, HEIGHT / 8)
         self.draw_text("SCORE: " + str(self.score), 22, WHITE, WIDTH / 2, HEIGHT / 4 + 25)
@@ -606,9 +613,10 @@ class Game:
                 file.write(str(self.score) + '\n')
         else:
             self.draw_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH / 2, HEIGHT / 4 + 95)
-
         pg.display.flip()
         self.wait_for_key()
+        pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
+        pg.mixer.music.play(loops=-1)
 
     def wait_for_key(self):
         pg.event.wait()
