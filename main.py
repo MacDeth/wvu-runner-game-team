@@ -74,6 +74,7 @@ class Game:
         # Load all assets, score, and save
         self.dir = path.dirname(__file__)
         img_dir = path.join(self.dir, 'img')
+
         # Create file to save the high score
         with open(path.join(self.dir, HS_FILE), 'r+') as file:
             try:
@@ -90,6 +91,14 @@ class Game:
         
 #         for i in range(1, 4):
 #             self.background_images.append(pg.image.load(path.join(img_dir, '.png'.format(i))).convert())
+
+        #Loading sound
+        self.snd_dir = path.join(self.dir, 'sound')
+        self.locked_sound = pg.mixer.Sound(path.join(self.snd_dir, 'locked.wav'))
+        self.unlocked_sound = pg.mixer.Sound(path.join(self.snd_dir, 'opendoor.wav'))
+        self.key_sound = pg.mixer.Sound(path.join(self.snd_dir, 'key.wav'))
+        self.intro_sound = pg.mixer.Sound(path.join(self.snd_dir, 'intro_song.wav'))
+        self.gameplay_sound = pg.mixer.Sound(path.join(self.snd_dir, 'gameplay_sound.wav'))
             
         # Loading Spritesheet Image
         self.spritesheet = Spritesheet(path.join(img_dir, SPRITE_FILE))
@@ -135,6 +144,7 @@ class Game:
         
         self.door_img = pg.image.load(path.join(img_dir, DOOR_IMG)).convert_alpha()
         self.door_img = pg.transform.scale(self.door_img, (200, 350))
+
 
 # --NEW-- AFTER ENTERING A ROOM NEW IS CALLED -> RUN -> EVENTS & UPDATE & DRAW
     def lvl_init(self):
@@ -362,6 +372,7 @@ class Game:
         if key_hits:
             # door1_key = True
             self.flags = self.flags | 32
+            self.key_sound.play()
 
         # With key player enters door, if correct key permits:
         door_hits = pg.sprite.spritecollide(self.player, self.doors, False)
@@ -380,6 +391,7 @@ class Game:
         if door_hits and (self.flags & 64):
             for door in door_hits:
                 if not door.locked:
+                    self.unlocked_sound.play()
                     if door.number == 1:
                         # door1_fact
                         if (self.flags & 4):
@@ -587,6 +599,7 @@ class Game:
             if door_hits and (self.flags & 128):
                 for door in door_hits:
                     if door.locked:
+                        self.locked_sound.play()
                         self.draw_text("Locked.", 22, BLACK, door.rect.centerx, door.rect.bottom - 350)
                     else:
                         self.draw_text("Unlocked. E to Enter", 22, BLACK, door.rect.centerx, door.rect.bottom - 350)
@@ -603,10 +616,14 @@ class Game:
         self.draw_text("Use Any Key to Enter!", 22, GRAY, WIDTH / 2, HEIGHT / 8 + 110)
         self.draw_text("High Score: " + str(self.highscore), 22, GRAY, WIDTH / 2, 15)
         pg.display.flip()
+        pg.mixer.music.load(path.join(self.snd_dir, 'intro_song.wav'))
+        pg.mixer.music.play(loops=-1)
         self.wait_for_key()
 
     def intro_screen(self):
         # After start screen.
+        pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
+        pg.mixer.music.play(loops=-1)
         self.screen.fill(BGCOLOR)
         self.draw_text("You took the dare to explore the building knowing it is off limits.", 22, BLACK, WIDTH / 2, HEIGHT / 2 - 25)
         self.draw_text("Upon entering, the floor gave and you fell into a room of three doors.", 22, BLACK, WIDTH / 2, HEIGHT / 2)
@@ -630,7 +647,8 @@ class Game:
             return
 
         self.level_state = LevelState.LEVEL_SELECT
-
+        pg.mixer.music.load(path.join(self.snd_dir, 'intro_song.wav'))
+        pg.mixer.music.play(loops=-1)
         self.screen.blit(self.death_img, [-25, -80])
         self.draw_text('YOU ARE TRAPPED', 100, WHITE, WIDTH / 2, HEIGHT / 8)
         self.draw_text("SCORE: " + str(self.score), 22, WHITE, WIDTH / 2, HEIGHT / 4 + 25)
@@ -643,9 +661,10 @@ class Game:
                 file.write(str(self.score) + '\n')
         else:
             self.draw_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH / 2, HEIGHT / 4 + 95)
-
         pg.display.flip()
         self.wait_for_key()
+        pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
+        pg.mixer.music.play(loops=-1)
 
     def wait_for_key(self):
         pg.event.wait()
