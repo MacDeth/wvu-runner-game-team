@@ -1,7 +1,5 @@
 # ---- Settings ----
 import pygame
-import os
-from pygame.mixer import SoundType
 
 pygame.init()
 

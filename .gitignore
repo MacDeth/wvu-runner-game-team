@@ -1,4 +1,6 @@
 CS475_Asylum_Progress.txt
+# Intellij
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
