@@ -1,6 +1,7 @@
 CS475_Asylum_Progress.txt
 # Intellij
 .idea/
+wvu-runner-game-team.iml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
