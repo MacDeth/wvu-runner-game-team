@@ -1,4 +1,10 @@
 # ---- Settings ----
+import pygame
+import os
+from pygame.mixer import SoundType
+
+pygame.init()
+
 WIDTH = 1280
 HEIGHT = 720
 FPS = 30

@@ -72,6 +72,7 @@ class Game:
         # Load all assets, score, and save
         self.dir = path.dirname(__file__)
         img_dir = path.join(self.dir, 'img')
+
         # Create file to save the high score
         with open(path.join(self.dir, HS_FILE), 'r+') as file:
             try:
@@ -88,6 +89,12 @@ class Game:
         
 #         for i in range(1, 4):
 #             self.background_images.append(pg.image.load(path.join(img_dir, '.png'.format(i))).convert())
+
+        #Loading sound
+        self.snd_dir = path.join(self.dir, 'sound')
+        self.locked_sound = pg.mixer.Sound(path.join(self.snd_dir, 'locked.wav'))
+        self.unlocked_sound = pg.mixer.Sound(path.join(self.snd_dir, 'opendoor.wav'))
+        self.key_sound = pg.mixer.Sound(path.join(self.snd_dir, 'key.wav'))
             
         # Loading Spritesheet Image
         self.spritesheet = Spritesheet(path.join(img_dir, SPRITE_FILE))
@@ -133,6 +140,7 @@ class Game:
         
         self.door_img = pg.image.load(path.join(img_dir, DOOR_IMG)).convert_alpha()
         self.door_img = pg.transform.scale(self.door_img, (200, 350))
+
 
 # --NEW-- AFTER ENTERING A ROOM NEW IS CALLED -> RUN -> EVENTS & UPDATE & DRAW
     def lvl_init(self):
@@ -343,6 +351,7 @@ class Game:
         # Key Collision
         key_hits = pg.sprite.spritecollide(self.player, self.powerups, True)
         if key_hits:
+            self.key_sound.play()
             self.door1_key = True
 
         # With key player enters door, if correct key permits:
@@ -359,6 +368,7 @@ class Game:
         if door_hits and self.entering:
             for door in door_hits:
                 if not door.locked:
+                    self.unlocked_sound.play()
                     if door.number == 1:
                         if self.door1_fact:
                             self.door_screen("Door 1 Random Facts and History.")
@@ -539,6 +549,7 @@ class Game:
             if door_hits and self.interacting:
                 for door in door_hits:
                     if door.locked:
+                        self.locked_sound.play()
                         self.draw_text("Locked.", 22, BLACK, door.rect.centerx, door.rect.bottom - 350)
                     else:
                         self.draw_text("Unlocked. E to Enter", 22, BLACK, door.rect.centerx, door.rect.bottom - 350)
