@@ -14,6 +14,8 @@ HS_FILE = "CS475_Asylum_Progress.txt"
 SPRITE_FILE = "Player.png"
 START_IMG = 'AsylumHomeStart.jpg'
 Death_IMG = 'AsylumHomeDeath.jpg'
+HOLD_IMG = 'holding.png'
+WALL_IMG = 'walls.png'
 DARKNESS_IMG = 'darkness.png'
 DARKNESS2_IMG = 'darkness2.png'
 DOOR_IMG = 'Door.png'
@@ -21,6 +23,12 @@ KEY_IMG = 'Key.png'
 PLATFORM1_IMG = 'platform1.png'
 PLATFORM2_IMG = 'platform2.png'
 PLATFORM3_IMG = 'platform3.png'
+
+# Fact Screens
+INFO_IMG = 'Info.png'
+SIGN1_IMG = 'Sign1.png'
+SIGN2_IMG = 'Sign2.png'
+SIGN3_IMG = 'Sign3.png'
 
 # Level 1 Assets
 #WARD1_IMG = 'Ward1.png'
@@ -31,6 +39,28 @@ LIGHT2_IMG = 'light2.png'
 WHEELCHAIR_IMG = 'Wheelchair.png'
 WHEELCHAIR_IMG2 = 'Wheelchair2.png'
 STRETCHER_IMG = 'Stretcher.png'
+
+# Level 2 Assets
+BALL1_IMG = 'Ball1.png'
+BALL2_IMG = 'Ball2.png'
+BEAR_IMG = 'Bear.png'
+DOLL_IMG = 'Doll.png'
+
+# Level 3 Assets
+FLOWER1_IMG = 'Flower1_color.png'
+FLOWER2_IMG = 'Flower2_color.png'
+FLOWER3_IMG = 'Flower3_color.png'
+TABLE1_IMG = 'Table1_.colorpsd.png'
+TABLE2_IMG = 'Table2_Colored.png'
+SIA1_IMG = 'Sia1_color.png'
+SIA2_IMG = 'Sia2_color.png'
+
+# Collectables
+HEART_IMG = 'Heart_glow.png'
+NEEDLE_IMG = 'Needle_glow.png'
+PILL1_IMG = 'Pill_1_glow.png'
+PILL2_IMG = 'Pill_2_glow.png'
+STETHOSCOPE_IMG = 'Stethoscope_glow.png'
 
 # Colors
 WHITE = (255, 255, 255)

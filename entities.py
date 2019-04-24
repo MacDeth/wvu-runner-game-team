@@ -209,7 +209,13 @@ class Background(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, game.all_sprites, game.background)
         self.game = game
         # Choose a random background object to display, use when sprites are done
-        self.image = random.choice(self.game.background_images)
+        #print("Choosing background", self.game.level)
+        if self.game.level == 1:
+            self.image = random.choice(self.game.background_images[1:3])
+        elif self.game.level == 2:
+            self.image = self.game.background_images[3]
+        else:
+            self.image = self.game.background_images[0]
         self.image.set_colorkey(WHITE)
         self.rect = self.image.get_rect()
         # My background images were 800 x 800 and I wanted them aligned to the square game field:
@@ -222,7 +228,7 @@ class Background(pg.sprite.Sprite):
 
     def update(self):
         # If the top of background objects go off the screen, remove them.
-        if self.rect.right < 0:
+        if self.rect.right < 10:
             self.kill()
 
     def move(self, amt):
@@ -262,16 +268,7 @@ class Floor(pg.sprite.Sprite):
         self._layer = PLATFORM_LAYER
         pg.sprite.Sprite.__init__(self, game.all_sprites, game.platforms)
         self.game = game
-        # Use when sprites are available
-        '''
-        images = [self.game.spritesheet.get_image(400, 200, 200, 60),
-                  self.game.spritesheet.get_image(600, 200, 200, 90),
-                  self.game.spritesheet.get_image(0, 400, 200, 60)]
-        '''
-        #self.image = random.choice(images)
-        #self.image.set_colorkey(BLACK)
-        self.image = pg.Surface((WIDTH + 300, 50))
-        self.image.fill(BLACK)
+        self.image = self.game.floor_img
         self.rect = self.image.get_rect()
         self.rect.x = -150
         self.rect.y = HEIGHT - 50
@@ -290,15 +287,7 @@ class Wall(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, game.all_sprites, game.walls)
         self.game = game
         # Use when sprites are available
-        '''
-        images = [self.game.spritesheet.get_image(400, 200, 200, 60),
-                  self.game.spritesheet.get_image(600, 200, 200, 90),
-                  self.game.spritesheet.get_image(0, 400, 200, 60)]
-        '''
-        #self.image = random.choice(images)
-        #self.image.set_colorkey(BLACK)
-        self.image = pg.Surface((150, 2 * HEIGHT))
-        self.image.fill(GRAY)
+        self.image = self.game.wall_img
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.centery = HEIGHT - 50
@@ -318,7 +307,10 @@ class Light(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         # Use when sprites are available
-        images = [self.game.light1_img, self.game.light2_img]
+        if self.game.level == 1 or self.game.level == 2:
+        	images = [self.game.light1_img, self.game.light2_img]
+        else:
+        	images = [self.game.sia1_img, self.game.sia2_img]
         self.image = random.choice(images)
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -342,22 +334,8 @@ class Power(pg.sprite.Sprite):
         self.current_frame = 0
         self.last_update = 0
         # When and if sprite is made for boost:
-        '''
-        self.image_choice = random.randrange(1, 3)
-        if self.image_choice == 1:
-            self.images = [self.game.spritesheet.get_image(600, 0, 200, 190),
-                           self.game.spritesheet.get_image(600, 600, 200, 190)]
-        else:
-            self.images = [self.game.spritesheet.get_image(0, 600, 200, 200),
-                           self.game.spritesheet.get_image(200, 600, 200, 200)]
-
-        for frame in self.images:
-            frame.set_colorkey(BLACK)
-        # self.image = random.choice(self.images)
-        self.image = self.images[self.current_frame]
-        '''
-        self.image = pg.Surface((10, 10))
-        self.image.fill(SKY)
+        images = [self.game.heart_img, self.game.needle_img, self.game.pill1_img, self.game.pill2_img, self.game.stethoscope_img]
+        self.image = random.choice(images)
         self.rect = self.image.get_rect()
         self.rect.centerx = self.plat.rect.centerx
         self.rect.bottom = self.plat.rect.top - 80
@@ -443,10 +421,13 @@ class Obstacles(pg.sprite.Sprite):
         self.plat = plat
         self.current_frame = 0
         self.last_update = 0
-
-        self.images = [self.game.bookcase_img, self.game.wheelchair1_img, self.game.wheelchair2_img,
-                       self.game.stretcher_img]
-        self.image = random.choice(self.images)
+        if self.game.level == 1:
+        	images = [self.game.bookcase_img, self.game.wheelchair1_img, self.game.wheelchair2_img,self.game.stretcher_img]
+        elif self.game.level == 2:
+        	images = [self.game.ball1_img, self.game.ball2_img, self.game.bear_img, self.game.doll_img]
+        else:
+        	images = [self.game.flower1_img, self.game.flower2_img, self.game.flower3_img, self.game.table1_img, self.game.table2_img]
+        self.image = random.choice(images)
         self.rect = self.image.get_rect()
         self.rect.centerx = self.plat.rect.centerx
         self.rect.bottom = self.plat.rect.top + 20
@@ -494,7 +475,6 @@ class Obstacles(pg.sprite.Sprite):
         self.rect.centerx = self.pos.x
         self.rect.centery = self.pos.y
 
-
 class Door(pg.sprite.Sprite):
     def __init__(self, game, x, y, number, key):
         self._layer = DOOR_LAYER
@@ -527,6 +507,35 @@ class Door(pg.sprite.Sprite):
         self.rect.centerx = self.pos.x
         self.rect.bottom = self.pos.y
 
+class HoldRoom(pg.sprite.Sprite):
+    def __init__(self, game, image):
+        self._layer = BACK_ART_LAYER
+        pg.sprite.Sprite.__init__(self, game.all_sprites, game.background)
+        self.game = game
+        self.current_frame = 0
+        self.last_update = 0
+        
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.centerx = WIDTH /2
+        self.rect.bottom = HEIGHT
+        self.vx = 0
+        self.vy = 0
+        self.dy = 0
+        
+        # Internal position
+        self.pos = vec(WIDTH/2, HEIGHT)
+    
+    def update(self):
+        now = pg.time.get_ticks()
+        center = self.rect.center
+        self.rect.center = center
+        self.rect.y += self.vy
+
+    def move(self, amt):
+        self.pos += amt
+        self.rect.centerx = self.pos.x
+        self.rect.bottom = self.pos.y
 
 class Key(pg.sprite.Sprite):
     # Not sure if we want to add a power feature, like a boost?
