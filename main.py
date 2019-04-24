@@ -238,7 +238,8 @@ class Game:
             Key(self, WIDTH, HEIGHT / 2)
 
         # Check for platform collisions while falling
-        self.platform_collision()
+        if (self.player.sliding == False):
+            self.platform_collision()
 
         # If player reaches rightmost 1/2 of screen
         if self.player.rect.centerx >= WIDTH / 2:
@@ -303,8 +304,16 @@ class Game:
                 return
 
         # Need lvl_init platforms
-
-        while len(self.platforms) < 10:
+        if (self.level_state == LevelState.LEVEL_ONE):
+            plat_num = 11
+            lvlmod = 1
+        elif (self.level_state == LevelState.LEVEL_TWO):
+            plat_num = 8
+            lvlmod = 1.5
+        elif (self.level_state == LevelState.LEVEL_THREE):
+            plat_num = 6
+            lvlmod = 2
+        while len(self.platforms) < plat_num:
             #width = random.randrange(50, 800)
             # More platformer like:
             #Platform(self, random.randrange(WIDTH, WIDTH + width), random.randrange(200, HEIGHT - 100))
@@ -316,7 +325,7 @@ class Game:
             height = random.randrange(200, HEIGHT - 50)
             flag = True
             for plat in self.platforms:
-                if (width <= plat.rect.x + 200 and width >= plat.rect.x - 200):
+                if (width <= plat.rect.x + 200*lvlmod and width >= plat.rect.x - 200*lvlmod):
                     if (height >= plat.rect.y + 100 or height <= plat.rect.y - 100):
                         continue #or (height <= plat.rect.y + 50 and height >= plat.rect.y - 50):
                     flag = False
@@ -744,7 +753,7 @@ class Game:
                 for hit in hits:
                     if hit.rect.bottom > lower_platform.rect.bottom:
                         lower_platform = hit
-                if self.player.pos.x < lower_platform.rect.right + 100 and self.player.pos.x > lower_platform.rect.left - 100:
+                if self.player.pos.x < lower_platform.rect.right + 50 and self.player.pos.x > lower_platform.rect.left - 50:
                     # Only move to platform top if feet higher than platform top
                     if self.player.pos.y <= lower_platform.rect.bottom:
                         self.player.pos.y = lower_platform.rect.top + 1
