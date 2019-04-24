@@ -301,7 +301,10 @@ class Game:
 
         # Subsequent Backgrounds
         if len(self.background) < 2:
-            Background(self)
+            prev_bckgrd = self.background.sprites()[-1]
+            bckgrd = Background(self)
+            bckgrd.rect.left = prev_bckgrd.rect.right
+            bckgrd.pos.x = float(bckgrd.rect.x)
 
         # Need new lights
         while len(self.lights) < 1:
