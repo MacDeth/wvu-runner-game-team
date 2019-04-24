@@ -99,6 +99,8 @@ class Game:
         self.key_sound = pg.mixer.Sound(path.join(self.snd_dir, 'key.wav'))
         self.intro_sound = pg.mixer.Sound(path.join(self.snd_dir, 'intro_song.wav'))
         self.gameplay_sound = pg.mixer.Sound(path.join(self.snd_dir, 'gameplay_sound.wav'))
+        self.scary_sound = pg.mixer.Sound(path.join(self.snd_dir, 'scary.wav'))
+        self.hit_sound = pg.mixer.Sound(path.join(self.snd_dir, 'collision.wav'))
             
         # Loading Spritesheet Image
         self.spritesheet = Spritesheet(path.join(img_dir, SPRITE_FILE))
@@ -240,6 +242,7 @@ class Game:
                         self.player.vel.x = 0
                     e.used = True
             else: # it's an enemy mob
+                self.scary_sound.play()
                 self.level_state = LevelState.GAME_OVER
                 # playing = False
                 self.flags = self.flags & ~512
@@ -317,6 +320,7 @@ class Game:
                 if sprite.rect.bottom > 0:
                     sprite.kill()
         if len(self.platforms) == 0:
+            self.scary_sound.play()
             self.level_state = LevelState.GAME_OVER
             # playing = False
             self.flags = self.flags & ~512
@@ -487,6 +491,7 @@ class Game:
                 if sprite.rect.bottom > 0:
                     sprite.kill()
         if len(self.platforms) == 0:
+            self.scary_sound.play()
             self.level_state = LevelState.GAME_OVER
             # playing = False
             self.flags = self.flags & ~512
