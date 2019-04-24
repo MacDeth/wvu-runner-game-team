@@ -318,6 +318,7 @@ class Game:
             lvlmod = 2
         else:
             plat_num = 11
+            lvlmod = 1
            
         while len(self.platforms) < plat_num:
             #width = random.randrange(50, 800)
