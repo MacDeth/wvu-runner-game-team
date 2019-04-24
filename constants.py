@@ -15,6 +15,7 @@ SPRITE_FILE = "Player.png"
 START_IMG = 'AsylumHomeStart.jpg'
 Death_IMG = 'AsylumHomeDeath.jpg'
 DARKNESS_IMG = 'darkness.png'
+DARKNESS2_IMG = 'darkness2.png'
 DOOR_IMG = 'Door.png'
 KEY_IMG = 'Key.png'
 PLATFORM1_IMG = 'platform1.png'

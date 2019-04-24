@@ -392,7 +392,8 @@ class Darkness(pg.sprite.Sprite):
         self.game = game
         self.current_frame = 0
         self.last_update = 0
-        self.image = self.game.darkness_img
+        self.images = [self.game.darkness_img, self.game.darkness2_img]
+        self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.rect.centerx = -500
         #self.rect.centerx = random.choice([-100, WIDTH + 100])
@@ -414,12 +415,12 @@ class Darkness(pg.sprite.Sprite):
         self.rect.x += self.vx
         self.vy += self.dy
         center = self.rect.center
-        '''
+        
         if now - self.last_update > 200:
             self.last_update = now
             self.current_frame = (self.current_frame + 1) % len(self.images)
         self.image = self.images[self.current_frame]
-        '''
+        
         self.rect = self.image.get_rect()
         # Advanced collision mask, if we want a very specific darkness and player hitbox:
         self.mask = pg.mask.from_surface(self.image)

@@ -139,6 +139,9 @@ class Game:
         self.darkness_img = pg.image.load(path.join(img_dir, DARKNESS_IMG)).convert_alpha()
         self.darkness_img = pg.transform.scale(self.darkness_img, (WIDTH, HEIGHT))
 
+        self.darkness2_img = pg.image.load(path.join(img_dir, DARKNESS2_IMG)).convert_alpha()
+        self.darkness2_img = pg.transform.scale(self.darkness2_img, (WIDTH, HEIGHT))
+
         self.key_img = pg.image.load(path.join(img_dir, KEY_IMG)).convert_alpha()
         self.key_img = pg.transform.scale(self.key_img, (50, 100))
         
