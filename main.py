@@ -205,6 +205,7 @@ class Game:
         # playing = True
         self.flags = self.flags | 512
         start_ticks = pg.time.get_ticks()
+        self.last_update = 0
         
         pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
         pg.mixer.music.play(loops=-1)
@@ -214,6 +215,9 @@ class Game:
             self.process_events()
             self.lvl_update(start_ticks)
             self.draw()
+            self.last_update = self.last_update + 1
+            if (self.last_update > 3):
+                self.last_update = 0
 
     def lvl_update(self, start_ticks):
         # Game loop update
@@ -262,47 +266,49 @@ class Game:
                     self.score += 10
 
         # Darkness Collision
-        mob_hits = pg.sprite.spritecollide(self.player, self.mobs, False)
-        for e in mob_hits:
-            # The only mobs that are on the platform layer are obstacles
-            if e._layer == PLATFORM_LAYER:
-                # change the state of the obstacle to "used"
-                if not e.used:
-                    self.player.vel.x -= BOOST_POWER #/ 2
-                    if self.player.vel.x < 0:
-                        self.player.vel.x = 0
-                    e.used = True
-            else: # it's an enemy mob
-                self.scary_sound.play()
-                self.level_state = LevelState.GAME_OVER
-                # playing = False
-                self.flags = self.flags & ~512
-                break
+        if self.last_update is 0:
+            mob_hits = pg.sprite.spritecollide(self.player, self.mobs, False)
+            for e in mob_hits:
+                # The only mobs that are on the platform layer are obstacles
+                if e._layer == PLATFORM_LAYER:
+                    # change the state of the obstacle to "used"
+                    if not e.used:
+                        self.player.vel.x -= BOOST_POWER #/ 2
+                        if self.player.vel.x < 0:
+                            self.player.vel.x = 0
+                        e.used = True
+                else: # it's an enemy mob
+                    self.scary_sound.play()
+                    self.level_state = LevelState.GAME_OVER
+                    # playing = False
+                    self.flags = self.flags & ~512
+                    break
 
         # Boost Collision
-        pow_hits = pg.sprite.spritecollide(self.player, self.powerups, True)
-        for pow in pow_hits:
-            if pow.type == 'boost':
-                self.player.vel.x = BOOST_POWER
-                # Jumping through platforms when boosted will not snap to platform:
-                self.player.jumping = False
-            # TODO: perhaps don't immediately teleport the player to the level select
-            elif pow.type == 'key': # they won the level by collecting a key
-                if self.level_state == LevelState.LEVEL_ONE:
-                    # collecting a key in lvl1 lets you enter lvl2
-                    # door2_key = True 
-                    self.flags = self.flags | 16
-                elif self.level_state == LevelState.LEVEL_TWO:
-                    # collecting a key in lvl2 lets you enter lvl3
-                    # door3_key = true
-                    self.flags = self.flags | 8 
-
-                # bring them back to the level selection screen
-                self.level_state = LevelState.LEVEL_SELECT
-                
-                # playing = False
-                self.flags = self.flags & ~512
-                return
+        if self.last_update is 1:
+            pow_hits = pg.sprite.spritecollide(self.player, self.powerups, True)
+            for pow in pow_hits:
+                if pow.type == 'boost':
+                    self.player.vel.x = BOOST_POWER
+                    # Jumping through platforms when boosted will not snap to platform:
+                    self.player.jumping = False
+                # TODO: perhaps don't immediately teleport the player to the level select
+                elif pow.type == 'key': # they won the level by collecting a key
+                    if self.level_state == LevelState.LEVEL_ONE:
+                        # collecting a key in lvl1 lets you enter lvl2
+                        # door2_key = True 
+                        self.flags = self.flags | 16
+                    elif self.level_state == LevelState.LEVEL_TWO:
+                        # collecting a key in lvl2 lets you enter lvl3
+                        # door3_key = true
+                        self.flags = self.flags | 8 
+    
+                    # bring them back to the level selection screen
+                    self.level_state = LevelState.LEVEL_SELECT
+                    
+                    # playing = False
+                    self.flags = self.flags & ~512
+                    return
 
         # Need lvl_init platforms
         if (self.level_state == LevelState.LEVEL_ONE):
@@ -427,7 +433,7 @@ class Game:
         if key_hits:
             # door1_key = True
             self.flags = self.flags | 32
-            self.key_sound.play()
+            #self.key_sound.play()
 
         # With key player enters door, if correct key permits:
         door_hits = pg.sprite.spritecollide(self.player, self.doors, False)
@@ -446,7 +452,7 @@ class Game:
         if door_hits and (self.flags & 64):
             for door in door_hits:
                 if not door.locked:
-                    self.unlocked_sound.play()
+                    #self.unlocked_sound.play()
                     if door.number == 1:
                         # door1_fact
                         if (self.flags & 4):
