@@ -86,7 +86,7 @@ class Game:
         bckgrd_dir = path.join(img_dir, 'background')
         self.background_images = [pg.transform.scale(
             pg.image.load(path.join(bckgrd_dir, filename)).convert(),
-            (WIDTH, HEIGHT + 50))
+            (WIDTH + 50, HEIGHT + 50))
                                   for filename in listdir(bckgrd_dir)]
         
 #         for i in range(1, 4):
@@ -99,6 +99,8 @@ class Game:
         self.key_sound = pg.mixer.Sound(path.join(self.snd_dir, 'key.wav'))
         self.intro_sound = pg.mixer.Sound(path.join(self.snd_dir, 'intro_song.wav'))
         self.gameplay_sound = pg.mixer.Sound(path.join(self.snd_dir, 'gameplay_sound.wav'))
+        self.scary_sound = pg.mixer.Sound(path.join(self.snd_dir, 'scary.wav'))
+        self.hit_sound = pg.mixer.Sound(path.join(self.snd_dir, 'collision.wav'))
             
         # Loading Spritesheet Image
         self.spritesheet = Spritesheet(path.join(img_dir, SPRITE_FILE))
@@ -108,6 +110,12 @@ class Game:
         self.start_img = pg.transform.scale(self.start_img, (1380, 1080))
         self.death_img = pg.image.load(path.join(img_dir, Death_IMG)).convert_alpha()
         self.death_img = pg.transform.scale(self.death_img, (1380, 1080))
+        self.hold_img = pg.image.load(path.join(img_dir, HOLD_IMG)).convert_alpha()
+        self.hold_img = pg.transform.scale(self.hold_img, (WIDTH + 800, HEIGHT + 100))
+        self.sign1_img =  pg.image.load(path.join(img_dir, SIGN1_IMG)).convert_alpha()
+        self.sign2_img =  pg.image.load(path.join(img_dir, SIGN2_IMG)).convert_alpha()
+        self.sign3_img =  pg.image.load(path.join(img_dir, SIGN3_IMG)).convert_alpha()
+        self.info_img =  pg.image.load(path.join(img_dir, INFO_IMG)).convert_alpha()
         #self.ward1_img = pg.image.load(path.join(img_dir, WARD1_IMG)).convert_alpha()
         #self.ward2_img = pg.image.load(path.join(img_dir, WARD2_IMG)).convert_alpha()
 
@@ -147,6 +155,32 @@ class Game:
         
         self.door_img = pg.image.load(path.join(img_dir, DOOR_IMG)).convert_alpha()
         self.door_img = pg.transform.scale(self.door_img, (200, 350))
+        
+        self.wall_img = pg.image.load(path.join(img_dir, WALL_IMG)).convert_alpha()
+        self.floor_img = pg.transform.scale(self.wall_img, (WIDTH + 300, 50))
+        self.wall_img = pg.transform.scale(self.wall_img, (150, 2 * HEIGHT))
+        
+        # Level 2
+        self.ball1_img = pg.image.load(path.join(img_dir, BALL1_IMG)).convert_alpha()
+        self.ball2_img = pg.image.load(path.join(img_dir, BALL2_IMG)).convert_alpha()
+        self.bear_img = pg.image.load(path.join(img_dir, BEAR_IMG)).convert_alpha()
+        self.doll_img = pg.image.load(path.join(img_dir, DOLL_IMG)).convert_alpha()
+
+        # Level 3
+        self.flower1_img = pg.image.load(path.join(img_dir, FLOWER1_IMG)).convert_alpha()
+        self.flower2_img = pg.image.load(path.join(img_dir, FLOWER2_IMG)).convert_alpha()
+        self.flower3_img = pg.image.load(path.join(img_dir, FLOWER3_IMG)).convert_alpha()
+        self.table1_img = pg.image.load(path.join(img_dir, TABLE1_IMG)).convert_alpha()
+        self.table2_img = pg.image.load(path.join(img_dir, TABLE2_IMG)).convert_alpha()
+        self.sia1_img = pg.image.load(path.join(img_dir, SIA1_IMG)).convert_alpha()
+        self.sia2_img = pg.image.load(path.join(img_dir, SIA2_IMG)).convert_alpha()
+        
+        # Collectables
+        self.heart_img = pg.image.load(path.join(img_dir, HEART_IMG)).convert_alpha()
+        self.needle_img = pg.image.load(path.join(img_dir, NEEDLE_IMG)).convert_alpha()
+        self.pill1_img = pg.image.load(path.join(img_dir, PILL1_IMG)).convert_alpha()
+        self.pill2_img = pg.image.load(path.join(img_dir, PILL2_IMG)).convert_alpha()
+        self.stethoscope_img = pg.image.load(path.join(img_dir, STETHOSCOPE_IMG)).convert_alpha()
 
 
 # --NEW-- AFTER ENTERING A ROOM NEW IS CALLED -> RUN -> EVENTS & UPDATE & DRAW
@@ -206,7 +240,8 @@ class Game:
             Key(self, WIDTH, HEIGHT / 2)
 
         # Check for platform collisions while falling
-        self.platform_collision()
+        if (self.player.sliding == False):
+            self.platform_collision()
 
         # If player reaches rightmost 1/2 of screen
         if self.player.rect.centerx >= WIDTH / 2:
@@ -240,6 +275,7 @@ class Game:
                         self.player.vel.x = 0
                     e.used = True
             else: # it's an enemy mob
+                self.scary_sound.play()
                 self.level_state = LevelState.GAME_OVER
                 # playing = False
                 self.flags = self.flags & ~512
@@ -271,8 +307,20 @@ class Game:
                 return
 
         # Need lvl_init platforms
-
-        while len(self.platforms) < 10:
+        if (self.level_state == LevelState.LEVEL_ONE):
+            plat_num = 11
+            lvlmod = 1
+        elif (self.level_state == LevelState.LEVEL_TWO):
+            plat_num = 8
+            lvlmod = 1.5
+        elif (self.level_state == LevelState.LEVEL_THREE):
+            plat_num = 6
+            lvlmod = 2
+        else:
+            plat_num = 11
+            lvlmod = 1
+           
+        while len(self.platforms) < plat_num:
             #width = random.randrange(50, 800)
             # More platformer like:
             #Platform(self, random.randrange(WIDTH, WIDTH + width), random.randrange(200, HEIGHT - 100))
@@ -284,7 +332,7 @@ class Game:
             height = random.randrange(200, HEIGHT - 50)
             flag = True
             for plat in self.platforms:
-                if (width <= plat.rect.x + 200 and width >= plat.rect.x - 200):
+                if (width <= plat.rect.x + 200*lvlmod and width >= plat.rect.x - 200*lvlmod):
                     if (height >= plat.rect.y + 100 or height <= plat.rect.y - 100):
                         continue #or (height <= plat.rect.y + 50 and height >= plat.rect.y - 50):
                     flag = False
@@ -320,6 +368,7 @@ class Game:
                 if sprite.rect.bottom > 0:
                     sprite.kill()
         if len(self.platforms) == 0:
+            self.scary_sound.play()
             self.level_state = LevelState.GAME_OVER
             # playing = False
             self.flags = self.flags & ~512
@@ -342,7 +391,9 @@ class Game:
         if not (self.flags & 32):
             # If key 1 not picked up, draw it in central room:
             Key(self, WIDTH / 2, HEIGHT / 8 + 100)
-
+        pg.mixer.music.load(path.join(self.snd_dir, 'intro_song.wav'))
+        pg.mixer.music.play(loops=-1)
+        HoldRoom(self, self.hold_img)
         Door(self, WIDTH / 8, HEIGHT - 25, 1, (self.flags & 32) is 32) # door1_key
         Door(self, WIDTH / 2, HEIGHT - 25, 2, (self.flags & 16) is 16) # door2_key
         Door(self, WIDTH - 100, HEIGHT - 25, 3, (self.flags & 8) is 8) #door3_key
@@ -401,7 +452,7 @@ class Game:
                     if door.number == 1:
                         # door1_fact
                         if (self.flags & 4):
-                            self.door_screen("Door 1 Random Facts and History.")
+                            self.door_screen("Door 1 Random Facts and History.", 1)
                         
                         # door1_fact = False
                         self.flags = self.flags & ~4
@@ -409,26 +460,29 @@ class Game:
                         # entering = False
                         self.flags = self.flags & ~64
                         self.level_state = LevelState.LEVEL_ONE
+                        self.level = 1
                     elif door.number == 2:
                         # door2_fact
                         if (self.flags & 2):
-                            self.door_screen("Door 2 Random Facts and History.")
+                            self.door_screen("Door 2 Random Facts and History.", 2)
                         # door2_fact = False
                         self.flags = self.flags & ~2
                         
                         # entering = False
                         self.flags = self.flags & ~64
                         self.level_state = LevelState.LEVEL_TWO
+                        self.level = 2
                     elif door.number == 3:
                         # door3_fact
                         if (self.flags & 1):
-                            self.door_screen("Door 3 Random Facts and History.")
+                            self.door_screen("Door 3 Random Facts and History.", 3)
                         # door3_fact = False
                         self.flags = self.flags & ~1
                         
                         # entering = False
                         self.flags = self.flags & ~64
                         self.level_state = LevelState.LEVEL_THREE
+                        self.level = 3
                     # playing = False
                     self.flags = self.flags & ~512
 
@@ -490,6 +544,7 @@ class Game:
                 if sprite.rect.bottom > 0:
                     sprite.kill()
         if len(self.platforms) == 0:
+            self.scary_sound.play()
             self.level_state = LevelState.GAME_OVER
             # playing = False
             self.flags = self.flags & ~512
@@ -628,23 +683,31 @@ class Game:
 
     def intro_screen(self):
         # After start screen.
-        pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
-        pg.mixer.music.play(loops=-1)
-        self.screen.fill(BGCOLOR)
-        self.draw_text("You took the dare to explore the building knowing it is off limits.", 22, BLACK, WIDTH / 2, HEIGHT / 2 - 25)
-        self.draw_text("Upon entering, the floor gave and you fell into a room of three doors.", 22, BLACK, WIDTH / 2, HEIGHT / 2)
-        self.draw_text(" You think it best to look for a way out... you hear something lurking in the distance.", 22, BLACK, WIDTH / 2, HEIGHT / 2 + 25)
+        #pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
+        #pg.mixer.music.play(loops=-1)
+        self.screen.blit(self.info_img, [0,0])
+        #self.draw_text("You took the dare to explore the building knowing it is off limits.", 22, BLACK, WIDTH / 2, HEIGHT / 2 - 25)
+        #self.draw_text("Upon entering, the floor gave and you fell into a room of three doors.", 22, BLACK, WIDTH / 2, HEIGHT / 2)
+        #self.draw_text(" You think it best to look for a way out... you hear something lurking in the distance.", 22, BLACK, WIDTH / 2, HEIGHT / 2 + 25)
         self.draw_text("Press Any Key to Continue!", 16, BLACK, WIDTH / 2, HEIGHT * 3 / 4)
         pg.display.flip()
         self.wait_for_key()
 
-    def door_screen(self, facts):
+    def door_screen(self, facts, door):
         # After start screen introduction.
-        self.screen.fill(BGCOLOR)
-        self.draw_text(facts, 22, BLACK, WIDTH / 2, HEIGHT / 2 - 25)
+        #self.screen.fill(BGCOLOR)
+        if door == 1:
+            self.screen.blit(self.sign1_img, [0,0])
+        elif door == 2:
+            self.screen.blit(self.sign2_img, [0,0])
+        else:
+            self.screen.blit(self.sign3_img, [0,0])
+        #self.draw_text(facts, 22, BLACK, WIDTH / 2, HEIGHT / 2 - 25)
         self.draw_text("Press Any Key to Continue!", 16, BLACK, WIDTH / 2, HEIGHT * 3 / 4)
         pg.display.flip()
         self.wait_for_key()
+        pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
+        pg.mixer.music.play(loops=-1)
 
     def game_over_screen(self):
         # Game over screen only if you lose, not if you close program
@@ -702,7 +765,7 @@ class Game:
                 for hit in hits:
                     if hit.rect.bottom > lower_platform.rect.bottom:
                         lower_platform = hit
-                if self.player.pos.x < lower_platform.rect.right + 100 and self.player.pos.x > lower_platform.rect.left - 100:
+                if self.player.pos.x < lower_platform.rect.right + 50 and self.player.pos.x > lower_platform.rect.left - 50:
                     # Only move to platform top if feet higher than platform top
                     if self.player.pos.y <= lower_platform.rect.bottom:
                         self.player.pos.y = lower_platform.rect.top + 1
