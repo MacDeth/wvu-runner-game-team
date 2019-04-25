@@ -31,8 +31,10 @@ SIGN2_IMG = 'Sign2.png'
 SIGN3_IMG = 'Sign3.png'
 
 # Level 1 Assets
-#WARD1_IMG = 'Ward1.png'
-#WARD2_IMG = 'Ward2.png'
+WARD1_IMG = 'ward1.png'
+WARD2_IMG = 'ward2.png'
+LILY_IMG = 'lily.png'
+HALL_IMG = 'hall.png'
 BOOKCASE_IMG = 'BookCase.png'
 LIGHT_IMG = 'light1.png'
 LIGHT2_IMG = 'light2.png'

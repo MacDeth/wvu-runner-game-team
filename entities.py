@@ -211,11 +211,11 @@ class Background(pg.sprite.Sprite):
         # Choose a random background object to display, use when sprites are done
         #print("Choosing background", self.game.level)
         if self.game.level == 1:
-            self.image = random.choice(self.game.background_images[1:3])
+            self.image = random.choice([self.game.ward1_img, self.game.ward2_img])
         elif self.game.level == 2:
-            self.image = self.game.background_images[3]
+            self.image = self.game.hall_img
         else:
-            self.image = self.game.background_images[0]
+            self.image = self.game.lily_img
         self.image.set_colorkey(WHITE)
         self.rect = self.image.get_rect()
         # My background images were 800 x 800 and I wanted them aligned to the square game field:

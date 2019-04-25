@@ -48,7 +48,7 @@ class Game:
         # door1_fact  = 2      1
         # door2_fact  = 1      1
         # door3_fact  = 0      1
-        self.flags = 263
+        self.flags = int('0100000111', 2) #263
         
         self.clock = pg.time.Clock()
         self.last_update = 0
@@ -81,17 +81,7 @@ class Game:
                 self.highscore = int(file.read())
             except:
                 self.highscore = 0
-                
-        # Background Object Image Loading:
-        bckgrd_dir = path.join(img_dir, 'background')
-        self.background_images = [pg.transform.scale(
-            pg.image.load(path.join(bckgrd_dir, filename)).convert(),
-            (WIDTH + 50, HEIGHT + 50))
-                                  for filename in listdir(bckgrd_dir)]
         
-#         for i in range(1, 4):
-#             self.background_images.append(pg.image.load(path.join(img_dir, '.png'.format(i))).convert())
-
         #Loading sound
         self.snd_dir = path.join(self.dir, 'sound')
         self.locked_sound = pg.mixer.Sound(path.join(self.snd_dir, 'locked.wav'))
@@ -116,8 +106,14 @@ class Game:
         self.sign2_img =  pg.image.load(path.join(img_dir, SIGN2_IMG)).convert_alpha()
         self.sign3_img =  pg.image.load(path.join(img_dir, SIGN3_IMG)).convert_alpha()
         self.info_img =  pg.image.load(path.join(img_dir, INFO_IMG)).convert_alpha()
-        #self.ward1_img = pg.image.load(path.join(img_dir, WARD1_IMG)).convert_alpha()
-        #self.ward2_img = pg.image.load(path.join(img_dir, WARD2_IMG)).convert_alpha()
+        self.ward1_img = pg.image.load(path.join(img_dir, WARD1_IMG)).convert_alpha()
+        self.ward1_img = pg.transform.scale(self.ward1_img, (WIDTH + 50, HEIGHT + 50))
+        self.ward2_img = pg.image.load(path.join(img_dir, WARD2_IMG)).convert_alpha()
+        self.ward2_img = pg.transform.scale(self.ward2_img, (WIDTH + 50, HEIGHT + 50))
+        self.lily_img = pg.image.load(path.join(img_dir, LILY_IMG)).convert_alpha()
+        self.lily_img = pg.transform.scale(self.lily_img, (WIDTH + 50, HEIGHT + 50))
+        self.hall_img = pg.image.load(path.join(img_dir, HALL_IMG)).convert_alpha()
+        self.hall_img = pg.transform.scale(self.hall_img, (WIDTH + 50, HEIGHT + 50))
 
         self.platform1_img = pg.image.load(path.join(img_dir, PLATFORM1_IMG)).convert_alpha()
         self.platform1_img = pg.transform.scale(self.platform1_img, (200, 50))
@@ -210,6 +206,8 @@ class Game:
         self.flags = self.flags | 512
         start_ticks = pg.time.get_ticks()
         
+        pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
+        pg.mixer.music.play(loops=-1)
         # while playing
         while (self.flags & 512):
             self.clock.tick(FPS)
@@ -706,8 +704,6 @@ class Game:
         self.draw_text("Press Any Key to Continue!", 16, BLACK, WIDTH / 2, HEIGHT * 3 / 4)
         pg.display.flip()
         self.wait_for_key()
-        pg.mixer.music.load(path.join(self.snd_dir, 'gameplay_sound.wav'))
-        pg.mixer.music.play(loops=-1)
 
     def game_over_screen(self):
         # Game over screen only if you lose, not if you close program
