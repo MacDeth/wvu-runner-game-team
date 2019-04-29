@@ -433,7 +433,7 @@ class Game:
         if key_hits:
             # door1_key = True
             self.flags = self.flags | 32
-            #self.key_sound.play()
+            self.key_sound.play()
 
         # With key player enters door, if correct key permits:
         door_hits = pg.sprite.spritecollide(self.player, self.doors, False)
@@ -452,7 +452,7 @@ class Game:
         if door_hits and (self.flags & 64):
             for door in door_hits:
                 if not door.locked:
-                    #self.unlocked_sound.play()
+                    self.unlocked_sound.play()
                     if door.number == 1:
                         # door1_fact
                         if (self.flags & 4):
